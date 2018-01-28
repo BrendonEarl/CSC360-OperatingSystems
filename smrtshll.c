@@ -37,18 +37,18 @@ int main()
 
 			/* show tokenized reply */
 			printf("\nTokenizing reply:\n");
-			char *tokRply = strtok(replycpy, " ");
-			while (tokRply != NULL)
+			char *tokreply = strtok(replycpy, " ");
+			while (tokreply != NULL)
 			{
-				printf("%s\n", tokRply);
-				tokRply = readNextStrTok();
+				printf("%s\n", tokreply);
+				tokreply = readNextStrTok();
 			}
 			printf("\n");
 
 			/* control input */
-			printf("%s\n\n", tokRep);
-			tokRply = strtok(reply, " ");
-			instance(tokRply);
+			printf("%s\n\n", tokreply);
+			tokreply = strtok(reply, " ");
+			instance(tokreply);
 		}
 
 		free(reply);
@@ -60,12 +60,9 @@ int main()
 
 void instance(char *input)
 {
-	printf("here");
-
-	char *nxtStrTokn = readNextStrTok();
-	printf("%s    ", input);
-	printf("%s", nxtStrTokn);
-	if (nxtStrTokn != NULL && !strcmp(nxtStrTokn, "cd"))
+	char *nextstrtok = readNextStrTok();
+	printf("next token: %s\n", nextstrtok);
+	if (nextstrtok != NULL && !strcmp(nextstrtok, "cd"))
 	{
 		printf("cd selected");
 	}

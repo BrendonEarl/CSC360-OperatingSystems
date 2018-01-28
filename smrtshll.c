@@ -12,7 +12,7 @@ int main()
 	{
 		/* get current workding directory */
 		getcwd(cwd, sizeof(cwd));
-		sprintf(prompt, "SMrTSHll: %s > ", cwd);
+		sprintf(prompt, "\nSMrTSHll: %s > ", cwd);
 
 		/* read stdin line in w/o prompt */
 		char *reply = readline(prompt);
@@ -25,7 +25,20 @@ int main()
 		}
 		else
 		{
-			printf("\nYou said: %s\n\n", reply);
+			/* show interpreted reply */
+			printf("\nYou said: %s\n", reply);
+
+			/* show tokenized reply */
+			printf("\nTokenizing reply:\n");
+			char *tokRply = strtok(reply, " ");
+			while (tokRply != NULL)
+			{
+				printf("%s\n", tokRply);
+				tokRply = strtok(NULL, " ,.-");
+			}
+			printf("\n");
+
+			/* control input */
 		}
 
 		free(reply);

@@ -9,3 +9,5 @@ BraceWrapping:
   BeforeCatch: true
   BeforeElse: true
   SplitEmptyFunction: false
+IndentCaseLabels: true
+IndentWidth: 4

@@ -51,7 +51,7 @@ int main()
 			printf("\n");
 
 			/* control input */
-			instance(reply);
+			instance(cwd, reply);
 		}
 
 		free(reply);
@@ -66,21 +66,49 @@ void instance(char *cwd, char *input)
 	char *tokinput = strtok(input, " ");
 	printf("in instance\n");
 	printf("next token: %s\n", tokinput);
-	if (tokinput != NULL && !strcmp(tokinput, "ls"))
+	if (tokinput != NULL)
 	{
-		printf("ls selected");
-		ls(cwd);
-	}
-	if (tokinput != NULL && !strcmp(tokinput, "cd"))
-	{
-		printf("cd selected");
-		cd(cwd);
+		if (!strcmp(tokinput, "ls"))
+		{
+			printf("ls selected");
+			ls(cwd);
+		}
+		else if (!strcmp(tokinput, "cd"))
+		{
+			printf("cd selected");
+			cd(cwd);
+		}
 	}
 	return;
 }
 
 void ls(char *cwd)
 {
+	printf("activated ls\n");
+	DIR *dir;
+	struct dirent *ent;
+
+	dir = opendir(cwd);
+	if (dir != NULL)
+	{
+		while ((ent = readdir(dir)) != NULL)
+		{
+			switch (ent->d_type)
+			{
+			case DT_REG:
+				printf("%s\n", ent->d_name);
+				break;
+			case DT_DIR:
+				printf("%s/\n", ent->d_name);
+				break;
+			case DT_LNK:
+				printf("@%s\n", ent->d_name);
+				break;
+			default:
+				printf("%s*\n", ent->d_name);
+			}
+		}
+	}
 	return;
 }
 

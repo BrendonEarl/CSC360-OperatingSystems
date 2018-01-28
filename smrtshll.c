@@ -4,6 +4,7 @@
 
 int main();
 void instance();
+char *readNextStrTok();
 
 int main()
 {
@@ -19,9 +20,8 @@ int main()
 
 		/* read stdin line in w/o prompt */
 		char *reply = readline(prompt);
-		/* Note that readline strips away the final \n */
-		/* For Perl junkies, readline automatically chomps the line read */
 
+		/* catch exit request */
 		if (!strcmp(reply, "bye") || !strcmp(reply, "quit"))
 		{
 			bailout = 1;
@@ -31,17 +31,23 @@ int main()
 			/* show interpreted reply */
 			printf("\nYou said: %s\n", reply);
 
+			/* copying reply */
+			char *replycpy[sizeof(reply)];
+			strcpy(replycpy, reply);
+
 			/* show tokenized reply */
 			printf("\nTokenizing reply:\n");
-			char *tokRply = strtok(reply, " ");
+			char *tokRply = strtok(replycpy, " ");
 			while (tokRply != NULL)
 			{
 				printf("%s\n", tokRply);
-				tokRply = strtok(NULL, " ,.-");
+				tokRply = readNextStrTok();
 			}
 			printf("\n");
 
 			/* control input */
+			printf("%s\n\n", tokRep);
+			tokRply = strtok(reply, " ");
 			instance(tokRply);
 		}
 
@@ -54,5 +60,24 @@ int main()
 
 void instance(char *input)
 {
-	return
+	printf("here");
+
+	char *nxtStrTokn = readNextStrTok();
+	printf("%s    ", input);
+	printf("%s", nxtStrTokn);
+	if (nxtStrTokn != NULL && !strcmp(nxtStrTokn, "cd"))
+	{
+		printf("cd selected");
+	}
+	return;
+}
+
+void cd(char *input)
+{
+	return;
+}
+
+char *readNextStrTok()
+{
+	return strtok(NULL, " ");
 }

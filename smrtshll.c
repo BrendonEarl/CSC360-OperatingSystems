@@ -2,6 +2,9 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+int main();
+void instance();
+
 int main()
 {
 	char cwd[1024];
@@ -39,10 +42,17 @@ int main()
 			printf("\n");
 
 			/* control input */
+			instance(tokRply);
 		}
 
 		free(reply);
 	}
+
 	free(prompt);
 	printf("Bye Bye\n");
+}
+
+void instance(char *input)
+{
+	return
 }

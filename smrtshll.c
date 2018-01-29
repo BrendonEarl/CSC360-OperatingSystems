@@ -41,7 +41,7 @@ int main() {
             char *replycpy[sizeof(reply)];
             strcpy(replycpy, reply);
 
-            /* count arguments */
+            /* count arguments (using copy) */
             int argc = 0;
             char *cpyreplytok = strtok(replycpy, " ");
             if (cpyreplytok != NULL) {
@@ -53,15 +53,12 @@ int main() {
 
             /* tokenize reply */
             char *argv[argc];
-            printf("\nTokenizing reply:\n");
             char *replytok = strtok(reply, " ");
             argv[0] = replytok;
             for (int i = 1; replytok != NULL; i++) {
-                printf("%s\n", replytok);
                 replytok = readNextStrTok();
                 argv[i] = replytok;
             }
-            printf("\n");
 
             /* control input */
             if (sizeof(reply) / sizeof(char) >= 2 && reply[0] == 'b' &&
@@ -83,8 +80,12 @@ int main() {
     printf("Bye Bye\n");
 }
 
+/* instance - handles args
+ * @cwd {char *} - current working directory string
+ * @argc {int} - number of arguments
+ * @argv {char* []} pointer to array of arguments
+ */
 void instance(char *cwd, int argc, char *argv[]) {
-    printf("cmd: %s", argv[0]);
     if (argc >= 1) {
         if (!strcmp(argv[0], "cd") && argc >= 2) {
             cd(cwd, argv[1]);
@@ -96,9 +97,16 @@ void instance(char *cwd, int argc, char *argv[]) {
     return;
 }
 
-/* http://www.csl.mtu.edu/cs4411.ck/www/NOTES/process/fork/exec.html */
+/* basic - calls command passed in with arguments using execvp
+ * @cwd {char *} - current working directory string
+ * @argc {int} - number of arguments
+ * @argv {char* []} pointer to array of arguments
+ */
 void basic(char *cwd, int argc, char *argv[]) {
-    printf("activated basic\n");
+    /* snippet inspired by:
+     * http://www.csl.mtu.edu/cs4411.ck/www/NOTES/process/fork/exec.html
+     */
+    // fork and execute command passed in
     pid_t pid = fork();
     if (pid < 0) {
         printf("Error occured when forking");
@@ -116,12 +124,16 @@ void basic(char *cwd, int argc, char *argv[]) {
     return;
 }
 
+/* cd - change directory
+ * @cwd {char *} - current working directory string
+ * @path {char *} - path argument to move directories
+ */
 void cd(char *cwd, char *path) {
-    printf("activated cd\n");
     DIR *dir;
     char nextpath[256];
     nextpath[0] = '\0';
 
+    // handle cd based on start characters
     if (path == NULL) {
         strcat(nextpath, cwd);
         char tmp[] = "/..";
@@ -146,8 +158,10 @@ void cd(char *cwd, char *path) {
         strcat(nextpath, path);
     }
 
-    /* https://stackoverflow.com/questions/12510874/how-can-i-check-if-a-directory-exists
+    /* snippet inspired by:
+     * https://stackoverflow.com/questions/12510874/how-can-i-check-if-a-directory-exists
      */
+    // check if path exists, and move if so
     dir = opendir(nextpath);
     if (dir) {
         chdir(nextpath);

@@ -61,17 +61,17 @@ int main() {
 
 void instance(char *cwd, char *input) {
     char *tokinput = strtok(input, " ");
-    printf("in instance\n");
-    printf("next token: %s\n", tokinput);
+    printf("next token: %s\n\n", tokinput);
 
     if (tokinput != NULL) {
         if (!strcmp(tokinput, "ls")) {
-            printf("ls selected\n");
             ls(cwd);
         }
         else if (!strcmp(tokinput, "cd")) {
-            printf("cd selected\n");
             cd(cwd);
+        }
+        else {
+            printf("Unknown command: %s\n", tokinput);
         }
     }
     return;
@@ -118,14 +118,12 @@ void cd(char *cwd) {
         path++;
         strcat(nextpath, cwd);
         strcat(nextpath, path);
-        printf("%s", nextpath);
     }
     else {
         strcat(nextpath, cwd);
         char tmp[] = "/";
         strcat(nextpath, tmp);
         strcat(nextpath, path);
-        printf("%s", nextpath);
     }
     printf("new path: %s\n", nextpath);
 

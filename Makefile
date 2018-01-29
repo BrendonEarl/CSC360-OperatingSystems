@@ -12,4 +12,6 @@ args: args.c
 
 .PHONY clean:
 clean:
+	-rm args inf smrtshll
 	-rm -rf *.o *.exe
+	-rm -rf smrtshll.dSYM

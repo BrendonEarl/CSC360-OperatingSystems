@@ -57,6 +57,9 @@ int main() {
                     instance(cwd, &reply[3]);
                 }
             }
+            else {
+                instance(cwd, reply);
+            }
         }
 
         free(reply);
@@ -118,7 +121,18 @@ void cd(char *cwd) {
     char nextpath[256];
     nextpath[0] = '\0';
 
-    if (path[0] == '/') {
+    printf("home: %s\n", getenv("HOME"));
+    if (path == NULL) {
+        strcat(nextpath, cwd);
+        char tmp[] = "/..";
+        strcat(nextpath, tmp);
+    }
+    else if (path[0] == '~') {
+        char *tmp = getenv("HOME");
+        printf("%s", tmp);
+        strcat(nextpath, tmp);
+    }
+    else if (path[0] == '/') {
         strcpy(nextpath, path);
     }
     else if (path[0] == '.' && path[1] == '/') {
@@ -136,7 +150,7 @@ void cd(char *cwd) {
 
     dir = opendir(nextpath);
     if (dir) {
-        chdir(path);
+        chdir(nextpath);
     }
     else if (ENOENT == errno) {
         printf("CRISIS ALERTN");

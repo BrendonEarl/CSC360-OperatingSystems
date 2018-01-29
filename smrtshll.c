@@ -8,19 +8,44 @@
 #include <readline/history.h>
 #include <readline/readline.h>
 
+typedef enum bool {
+    False,
+    True,
+} bool;
+
+typedef struct bgp bgp;
+
+struct bgp {
+    pid_t pid;
+    bgp *next;
+    char *argvstr;
+    bool done;
+    char *outputbuff;
+};
+
+typedef struct bgps {
+    bgp *head;
+    int count;
+} bgps;
+
 int main();
+bgp *getbgpstail(bgp *bgprocess);
+bgps addbgp(bgps bgprocesses, bgp *bgprocess);
+bgps flushbgps(bgps bgprocesses);
 void instance(char *cwd, int argc, char *argv[]);
-char *readNextStrTok();
 void basic(char *cwd, int argc, char *argv[]);
 void cd(char *cwd, char *path);
+char *readNextStrTok();
+char *printbuff(char *buff, char *input);
 
 int main() {
     char cwd[1024];
     char *prompt = (char *)malloc(sizeof(cwd) + 14 * sizeof(char));
     pid_t pid;
+    bgps bgprocesses = {.head = NULL, .count = 0};
 
-    int bailout = 0;
-    while (!bailout) {
+    bool bailout = False;
+    while (bailout == False) {
         /* get current workding directory */
         getcwd(cwd, sizeof(cwd));
         sprintf(prompt, "\nSMrTSHll: %s > ", cwd);
@@ -31,7 +56,7 @@ int main() {
         /* catch exit request */
         if (!strcmp(reply, "bye") || !strcmp(reply, "quit") ||
             !strcmp(reply, "exit")) {
-            bailout = 1;
+            bailout = True;
         }
         else {
             /* show interpreted reply */
@@ -40,6 +65,8 @@ int main() {
             /* copying reply */
             char *replycpy[sizeof(reply)];
             strcpy(replycpy, reply);
+            char *argvstr[sizeof(reply)];
+            strcpy(argvstr, reply);
 
             /* count arguments (using copy) */
             int argc = 0;
@@ -64,8 +91,27 @@ int main() {
             if (sizeof(reply) / sizeof(char) >= 2 && reply[0] == 'b' &&
                 reply[1] == 'g') {
                 pid = fork();
+                bgp *nextbgp = (bgp *)malloc(sizeof(bgp));
+                nextbgp->pid = pid;
+                nextbgp->next = NULL;
+                nextbgp->argvstr = (char *)malloc(sizeof(argvstr));
+                strcpy(nextbgp->argvstr, argvstr);
+                nextbgp->done = False;
+                nextbgp->outputbuff = NULL;
+
+                printf("location of nextbgp: %p\n", nextbgp);
+
                 if (pid == 0) {
-                    instance(cwd, argc, argv);
+                    instance(cwd, argc - 1, &argv[1]);
+                    break;
+                }
+                else {
+                    printf("recording nextbgp: %d\n", pid);
+
+                    bgprocesses = addbgp(bgprocesses, nextbgp);
+                    flushbgps(bgprocesses);
+                    while (waitpid(pid, NULL, WUNTRACED) > 0)
+                        ;
                 }
             }
             else {
@@ -77,7 +123,50 @@ int main() {
     }
 
     free(prompt);
-    printf("Bye Bye\n");
+    if (bailout == True)
+        printf("Bye Bye\n");
+}
+
+bgps addbgp(bgps bgprocesses, bgp *bgprocess) {
+    printf("adding bgp\n");
+    if (bgprocesses.head == NULL) {
+        printf("starting head\n");
+        bgprocesses.count = 1;
+        bgprocesses.head = bgprocess;
+    }
+    else {
+        printf("adding to tail\n");
+        bgp *bgptail = getbgpstail(bgprocesses.head);
+        bgptail->next = bgprocess;
+        bgprocesses.count += 1;
+    }
+    return bgprocesses;
+}
+
+bgp *getbgpstail(bgp *bgprocess) {
+    if (bgprocess->next == NULL)
+        return bgprocess;
+    else
+        return getbgpstail(bgprocess->next);
+}
+
+bgps flushbgps(bgps bgprocesses) {
+    printf("flush status of bgps\n");
+    bgp *bgpcursor = bgprocesses.head;
+    while (bgpcursor != NULL) {
+        char pidstr[8];
+        sprintf(pidstr, "%d: ", bgpcursor->pid);
+        char donestr[16];
+        if (bgpcursor->done == True) {
+            strcpy(donestr, "has terminated.");
+        }
+        else {
+            strcpy(donestr, ".");
+        }
+        printf("%8s %s %s\n", pidstr, bgpcursor->argvstr, donestr);
+        bgpcursor = bgpcursor->next;
+    }
+    return bgprocesses;
 }
 
 /* instance - handles args
@@ -176,3 +265,8 @@ void cd(char *cwd, char *path) {
 }
 
 char *readNextStrTok() { return strtok(NULL, " "); }
+
+char *printbuff(char *buff, char *input) {
+    strcat(buff, input);
+    return buff;
+}

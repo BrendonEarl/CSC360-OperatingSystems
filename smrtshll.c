@@ -32,6 +32,7 @@ int main();
 bgp *getbgpstail(bgp *bgprocess);
 void addbgp(bgps *bgprocesses, bgp *bgprocess);
 void flushbgps(bgps *bgprocesses);
+void deletebgps(bgps *bgprocesses);
 void instance(char *cwd, int argc, char *argv[], bgp *process);
 void basic(char *cwd, int argc, char *argv[]);
 void cd(char *cwd, char *path);
@@ -118,6 +119,7 @@ int main() {
         free(reply);
     }
 
+    deletebgps(&bgprocesses);
     free(prompt);
     if (bailout == True)
         printf("Bye Bye\n");
@@ -156,6 +158,15 @@ void flushbgps(bgps *bgprocesses) {
         }
         printf("%8s %s %s\n", pidstr, bgpcursor->argvstr, donestr);
         bgpcursor = bgpcursor->next;
+    }
+}
+
+void deletebgps(bgps *bgprocesses) {
+    bgp *bgpcursor = bgprocesses->head;
+    while (bgpcursor != NULL) {
+        bgp *tmpbgpcursor = bgpcursor;
+        bgpcursor = bgpcursor->next;
+        free(tmpbgpcursor);
     }
 }
 

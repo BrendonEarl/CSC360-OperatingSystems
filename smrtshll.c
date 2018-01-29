@@ -64,9 +64,9 @@ int main() {
             printf("\nYou said: %s\n", reply);
 
             /* copying reply */
-            char *replycpy[sizeof(reply)];
+            char *replycpy;
             strcpy(replycpy, reply);
-            char *argvstr[sizeof(reply)];
+            char *argvstr;
             strcpy(argvstr, reply);
 
             /* count arguments (using copy) */
@@ -83,7 +83,8 @@ int main() {
             char *argv[argc];
             char *replytok = strtok(reply, " ");
             argv[0] = replytok;
-            for (int i = 1; replytok != NULL; i++) {
+            int i;
+            for (i = 1; replytok != NULL; i++) {
                 replytok = readNextStrTok();
                 argv[i] = replytok;
             }

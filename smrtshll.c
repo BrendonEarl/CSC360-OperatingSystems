@@ -31,7 +31,7 @@ typedef struct bgps {
 int main();
 bgp *getbgpstail(bgp *bgprocess);
 void addbgp(bgps *bgprocesses, bgp *bgprocess);
-void flushbgps(bgps *bgprocesses);
+void printbgpsstatus(bgps *bgprocesses);
 void deletebgps(bgps *bgprocesses);
 void instance(char *cwd, int argc, char *argv[], bgp *process);
 void basic(char *cwd, int argc, char *argv[]);
@@ -106,7 +106,7 @@ int main() {
                 }
                 else {
                     addbgp(&bgprocesses, nextbgp);
-                    flushbgps(&bgprocesses);
+                    printbgpsstatus(&bgprocesses);
                     while (waitpid(pid, NULL, WUNTRACED) > 0)
                         ;
                 }
@@ -144,7 +144,7 @@ bgp *getbgpstail(bgp *bgprocess) {
         return getbgpstail(bgprocess->next);
 }
 
-void flushbgps(bgps *bgprocesses) {
+void printbgpsstatus(bgps *bgprocesses) {
     bgp *bgpcursor = bgprocesses->head;
     while (bgpcursor != NULL) {
         char pidstr[8];

@@ -99,15 +99,11 @@ int main() {
                 nextbgp->done = False;
                 nextbgp->outputbuff = NULL;
 
-                printf("location of nextbgp: %p\n", nextbgp);
-
                 if (pid == 0) {
                     instance(cwd, argc - 1, &argv[1], nextbgp);
                     break;
                 }
                 else {
-                    printf("recording nextbgp: %d\n", pid);
-
                     addbgp(&bgprocesses, nextbgp);
                     flushbgps(&bgprocesses);
                     while (waitpid(pid, NULL, WUNTRACED) > 0)
@@ -128,14 +124,11 @@ int main() {
 }
 
 void addbgp(bgps *bgprocesses, bgp *bgprocess) {
-    printf("adding bgp\n");
     if (bgprocesses->head == NULL) {
-        printf("starting head\n");
         bgprocesses->count = 1;
         bgprocesses->head = bgprocess;
     }
     else {
-        printf("adding to tail\n");
         bgp *bgptail = getbgpstail(bgprocesses->head);
         bgptail->next = bgprocess;
         bgprocesses->count += 1;
@@ -150,7 +143,6 @@ bgp *getbgpstail(bgp *bgprocess) {
 }
 
 void flushbgps(bgps *bgprocesses) {
-    printf("flush status of bgps\n");
     bgp *bgpcursor = bgprocesses->head;
     while (bgpcursor != NULL) {
         char pidstr[8];

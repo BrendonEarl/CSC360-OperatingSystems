@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <unistd.h>
 #include <dirent.h>
@@ -8,10 +9,10 @@
 #include <readline/readline.h>
 
 int main();
-void instance(char *cwd, char *input);
+void instance(char *cwd, int argc, char *argv[]);
 char *readNextStrTok();
-void ls(char *cwd);
-void cd(char *cwd);
+void basic(char *cwd, int argc, char *argv[]);
+void cd(char *cwd, char *path);
 
 int main() {
     char cwd[1024];
@@ -40,12 +41,25 @@ int main() {
             char *replycpy[sizeof(reply)];
             strcpy(replycpy, reply);
 
-            /* show tokenized reply */
+            /* count arguments */
+            int argc = 0;
+            char *cpyreplytok = strtok(replycpy, " ");
+            if (cpyreplytok != NULL) {
+                while (cpyreplytok != NULL) {
+                    cpyreplytok = readNextStrTok();
+                    argc++;
+                }
+            }
+
+            /* tokenize reply */
+            char *argv[argc];
             printf("\nTokenizing reply:\n");
-            char *tokreply = strtok(replycpy, " ");
-            while (tokreply != NULL) {
-                printf("%s\n", tokreply);
-                tokreply = readNextStrTok();
+            char *replytok = strtok(reply, " ");
+            argv[0] = replytok;
+            for (int i = 1; replytok != NULL; i++) {
+                printf("%s\n", replytok);
+                replytok = readNextStrTok();
+                argv[i] = replytok;
             }
             printf("\n");
 
@@ -54,11 +68,11 @@ int main() {
                 reply[1] == 'g') {
                 pid = fork();
                 if (pid == 0) {
-                    instance(cwd, &reply[3]);
+                    instance(cwd, argc, argv);
                 }
             }
             else {
-                instance(cwd, reply);
+                instance(cwd, argc, argv);
             }
         }
 
@@ -69,59 +83,45 @@ int main() {
     printf("Bye Bye\n");
 }
 
-void instance(char *cwd, char *input) {
-    char *tokinput = strtok(input, " ");
-    printf("next token: %s\n\n", tokinput);
-
-    if (tokinput != NULL) {
-        if (!strcmp(tokinput, "ls")) {
-            ls(cwd);
-        }
-        else if (!strcmp(tokinput, "cd")) {
-            cd(cwd);
+void instance(char *cwd, int argc, char *argv[]) {
+    printf("cmd: %s", argv[0]);
+    if (argc >= 1) {
+        if (!strcmp(argv[0], "cd") && argc >= 2) {
+            cd(cwd, argv[1]);
         }
         else {
-            printf("Unknown command: %s\n", tokinput);
+            basic(cwd, argc, argv);
         }
     }
     return;
 }
 
-void ls(char *cwd) {
-    printf("activated ls\n");
-    DIR *dir;
-    struct dirent *ent;
-
-    dir = opendir(cwd);
-    if (dir != NULL) {
-        while ((ent = readdir(dir)) != NULL) {
-            switch (ent->d_type) {
-                case DT_REG:
-                    printf("%s\n", ent->d_name);
-                    break;
-                case DT_DIR:
-                    printf("%s/\n", ent->d_name);
-                    break;
-                case DT_LNK:
-                    printf("@%s\n", ent->d_name);
-                    break;
-                default:
-                    printf("%s*\n", ent->d_name);
-            }
-        }
-        closedir(dir);
+/* http://www.csl.mtu.edu/cs4411.ck/www/NOTES/process/fork/exec.html */
+void basic(char *cwd, int argc, char *argv[]) {
+    printf("activated basic\n");
+    pid_t pid = fork();
+    if (pid < 0) {
+        printf("Error occured when forking");
     }
+    else if (pid == 0) {
+        if (execvp(argv[0], argv) < 0) {
+            printf("Error occurent whith execvp");
+        }
+    }
+    else {
+        while (waitpid(pid, NULL, WUNTRACED) > 0)
+            ;
+    }
+
     return;
 }
 
-void cd(char *cwd) {
+void cd(char *cwd, char *path) {
     printf("activated cd\n");
     DIR *dir;
-    char *path = readNextStrTok();
     char nextpath[256];
     nextpath[0] = '\0';
 
-    printf("home: %s\n", getenv("HOME"));
     if (path == NULL) {
         strcat(nextpath, cwd);
         char tmp[] = "/..";
@@ -129,7 +129,6 @@ void cd(char *cwd) {
     }
     else if (path[0] == '~') {
         char *tmp = getenv("HOME");
-        printf("%s", tmp);
         strcat(nextpath, tmp);
     }
     else if (path[0] == '/') {
@@ -146,17 +145,18 @@ void cd(char *cwd) {
         strcat(nextpath, tmp);
         strcat(nextpath, path);
     }
-    printf("new path: %s\n", nextpath);
 
+    /* https://stackoverflow.com/questions/12510874/how-can-i-check-if-a-directory-exists
+     */
     dir = opendir(nextpath);
     if (dir) {
         chdir(nextpath);
     }
     else if (ENOENT == errno) {
-        printf("CRISIS ALERTN");
+        printf("Path does not exist");
     }
     else {
-        printf("I dunno");
+        printf("Unexpected error has occured");
     }
     return;
 }

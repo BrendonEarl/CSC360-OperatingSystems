@@ -16,6 +16,7 @@ void cd(char *cwd);
 int main() {
     char cwd[1024];
     char *prompt = (char *)malloc(sizeof(cwd) + 14 * sizeof(char));
+    pid_t pid;
 
     int bailout = 0;
     while (!bailout) {
@@ -49,7 +50,13 @@ int main() {
             printf("\n");
 
             /* control input */
-            instance(cwd, reply);
+            if (sizeof(reply) / sizeof(char) >= 2 && reply[0] == 'b' &&
+                reply[1] == 'g') {
+                pid = fork();
+                if (pid == 0) {
+                    instance(cwd, &reply[3]);
+                }
+            }
         }
 
         free(reply);

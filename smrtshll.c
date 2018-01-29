@@ -53,6 +53,7 @@ int main() {
 
         /* read stdin line in w/o prompt */
         char *reply = readline(prompt);
+        printf("\n");
 
         /* catch exit request */
         if (!strcmp(reply, "bye") || !strcmp(reply, "quit") ||
@@ -60,13 +61,10 @@ int main() {
             bailout = True;
         }
         else {
-            /* show interpreted reply */
-            printf("\nYou said: %s\n", reply);
-
             /* copying reply */
-            char *replycpy;
+            char *replycpy = (char *)malloc(sizeof(reply));
             strcpy(replycpy, reply);
-            char *argvstr;
+            char *argvstr = (char *)malloc(sizeof(reply));
             strcpy(argvstr, reply);
 
             /* count arguments (using copy) */
@@ -115,6 +113,9 @@ int main() {
             else {
                 instance(cwd, argc, argv, NULL);
             }
+
+            free(replycpy);
+            free(argvstr);
         }
 
         free(reply);

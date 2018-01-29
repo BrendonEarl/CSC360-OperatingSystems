@@ -30,9 +30,9 @@ typedef struct bgps {
 
 int main();
 bgp *getbgpstail(bgp *bgprocess);
-bgps addbgp(bgps bgprocesses, bgp *bgprocess);
-bgps flushbgps(bgps bgprocesses);
-void instance(char *cwd, int argc, char *argv[]);
+void addbgp(bgps *bgprocesses, bgp *bgprocess);
+void flushbgps(bgps *bgprocesses);
+void instance(char *cwd, int argc, char *argv[], bgp *process);
 void basic(char *cwd, int argc, char *argv[]);
 void cd(char *cwd, char *path);
 char *readNextStrTok();
@@ -102,20 +102,20 @@ int main() {
                 printf("location of nextbgp: %p\n", nextbgp);
 
                 if (pid == 0) {
-                    instance(cwd, argc - 1, &argv[1]);
+                    instance(cwd, argc - 1, &argv[1], nextbgp);
                     break;
                 }
                 else {
                     printf("recording nextbgp: %d\n", pid);
 
-                    bgprocesses = addbgp(bgprocesses, nextbgp);
-                    flushbgps(bgprocesses);
+                    addbgp(&bgprocesses, nextbgp);
+                    flushbgps(&bgprocesses);
                     while (waitpid(pid, NULL, WUNTRACED) > 0)
                         ;
                 }
             }
             else {
-                instance(cwd, argc, argv);
+                instance(cwd, argc, argv, NULL);
             }
         }
 
@@ -127,20 +127,19 @@ int main() {
         printf("Bye Bye\n");
 }
 
-bgps addbgp(bgps bgprocesses, bgp *bgprocess) {
+void addbgp(bgps *bgprocesses, bgp *bgprocess) {
     printf("adding bgp\n");
-    if (bgprocesses.head == NULL) {
+    if (bgprocesses->head == NULL) {
         printf("starting head\n");
-        bgprocesses.count = 1;
-        bgprocesses.head = bgprocess;
+        bgprocesses->count = 1;
+        bgprocesses->head = bgprocess;
     }
     else {
         printf("adding to tail\n");
-        bgp *bgptail = getbgpstail(bgprocesses.head);
+        bgp *bgptail = getbgpstail(bgprocesses->head);
         bgptail->next = bgprocess;
-        bgprocesses.count += 1;
+        bgprocesses->count += 1;
     }
-    return bgprocesses;
 }
 
 bgp *getbgpstail(bgp *bgprocess) {
@@ -150,9 +149,9 @@ bgp *getbgpstail(bgp *bgprocess) {
         return getbgpstail(bgprocess->next);
 }
 
-bgps flushbgps(bgps bgprocesses) {
+void flushbgps(bgps *bgprocesses) {
     printf("flush status of bgps\n");
-    bgp *bgpcursor = bgprocesses.head;
+    bgp *bgpcursor = bgprocesses->head;
     while (bgpcursor != NULL) {
         char pidstr[8];
         sprintf(pidstr, "%d: ", bgpcursor->pid);
@@ -166,21 +165,24 @@ bgps flushbgps(bgps bgprocesses) {
         printf("%8s %s %s\n", pidstr, bgpcursor->argvstr, donestr);
         bgpcursor = bgpcursor->next;
     }
-    return bgprocesses;
 }
 
 /* instance - handles args
  * @cwd {char *} - current working directory string
  * @argc {int} - number of arguments
  * @argv {char* []} pointer to array of arguments
+ * @process {bgp *} pointer background process struct
  */
-void instance(char *cwd, int argc, char *argv[]) {
+void instance(char *cwd, int argc, char *argv[], bgp *process) {
     if (argc >= 1) {
         if (!strcmp(argv[0], "cd") && argc >= 2) {
             cd(cwd, argv[1]);
         }
         else {
             basic(cwd, argc, argv);
+        }
+        if (process != NULL) {
+            process->done = True;
         }
     }
     return;

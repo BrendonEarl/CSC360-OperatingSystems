@@ -11,3 +11,4 @@ BraceWrapping:
   SplitEmptyFunction: false
 IndentCaseLabels: true
 IndentWidth: 4
+SortIncludes: false

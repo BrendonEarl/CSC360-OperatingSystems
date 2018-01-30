@@ -100,20 +100,24 @@ int main() {
                     mmap(NULL, sizeof nextbgp, PROT_READ | PROT_WRITE,
                          MAP_SHARED | MAP_ANONYMOUS, -1, 0);
 
+                /* assign values to background process struct */
                 nextbgp->next = NULL;
                 nextbgp->argvstr = (char *)malloc(sizeof(argvstr));
                 strcpy(nextbgp->argvstr, &argvstr[2]);
                 nextbgp->done = False;
                 nextbgp->outputbuff = (char *)malloc(sizeof(4096));
 
+                /* start fork */
                 pid = fork();
 
+                /* child */
                 if (pid == 0) {
                     instance(cwd, argc - 1, &argv[1], nextbgp);
-                }
+                } /* parent */
                 else {
                     nextbgp->pid = pid;
                     addbgp(&bgprocesses, nextbgp);
+                    /* wait - to be taken out once buffers handled */
                     while (waitpid(pid, NULL, WUNTRACED) > 0)
                         ;
                 }
@@ -129,24 +133,34 @@ int main() {
         free(reply);
     }
 
+    /* tidy up */
     deletebgps(bgprocesses);
     free(prompt);
     if (bailout == True)
         printf("Bye Bye\n");
 }
 
+/* addbgp - add background process onto linked list
+ * @bgprocesses {bgps *} - background process struct
+ * @bgprocess {bgp *} - background process to be added
+ */
 void addbgp(bgps *bgprocesses, bgp *bgprocess) {
+    /* if first to be added to list */
     if (bgprocesses->head == NULL) {
         bgprocesses->count = 1;
         bgprocesses->head = bgprocess;
     }
-    else {
-        bgp *bgptail = getbgpstail(bgprocesses->head);
-        bgptail->next = bgprocess;
+    else { /* if adding onto existing list */
+        bgp *bgptail = getbgpstail(bgprocesses->head); // find tail
+        bgptail->next = bgprocess;                     // assign as next on tail
         bgprocesses->count += 1;
     }
 }
 
+/* deletebgps - iteritively frees background process structs on call
+ * @bgprocesses {bgps *} - background process struct
+ * @returns {bgp *} - tail of background processes linked list
+ */
 bgp *getbgpstail(bgp *bgprocess) {
     if (bgprocess->next == NULL)
         return bgprocess;
@@ -154,9 +168,15 @@ bgp *getbgpstail(bgp *bgprocess) {
         return getbgpstail(bgprocess->next);
 }
 
+/* printbgpsstatus - print background process onto console
+ * @bgprocesses {bgps *} - background process struct
+ */
 void printbgpsstatus(bgps *bgprocesses) {
+    int count = 0;
     bgp *bgpcursor = bgprocesses->head;
+    /* while there are processes to iterate over */
     while (bgpcursor != NULL) {
+        /* build string for process list */
         char pidstr[8];
         sprintf(pidstr, "%d: ", bgpcursor->pid);
         char donestr[16];
@@ -164,11 +184,14 @@ void printbgpsstatus(bgps *bgprocesses) {
             strcpy(donestr, "has terminated.");
         }
         else {
+            count += 1;
             strcpy(donestr, "");
         }
+        /* print process string */
         printf("%8s %s %s\n", pidstr, bgpcursor->argvstr, donestr);
         bgpcursor = bgpcursor->next;
     }
+    printf("Total background jobs: %d", count);
 }
 
 /* deletebgps - iteritively frees background process structs on call
@@ -176,9 +199,11 @@ void printbgpsstatus(bgps *bgprocesses) {
  */
 void deletebgps(bgps bgprocesses) {
     bgp *bgpcursor = bgprocesses.head;
+    /* while there are processes to iterate over */
     while (bgpcursor != NULL) {
         bgp *tmpbgpcursor = bgpcursor;
         bgpcursor = bgpcursor->next;
+        /* free & unmap memory used */
         free(tmpbgpcursor->argvstr);
         free(tmpbgpcursor->outputbuff);
         munmap(tmpbgpcursor, sizeof *tmpbgpcursor);

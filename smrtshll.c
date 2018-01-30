@@ -21,7 +21,7 @@ struct bgp {
     bgp *next;
     char *argvstr;
     bool done;
-    char *outputbuff;
+    FILE *outputbuff;
 };
 
 typedef struct bgps {
@@ -32,6 +32,7 @@ typedef struct bgps {
 int main();
 bgp *getbgpstail(bgp *bgprocess);
 void addbgp(bgps *bgprocesses, bgp *bgprocess);
+void flushbgps(bgps *bgprocesses);
 void printbgpsstatus(bgps *bgprocesses);
 void deletebgps(bgps bgprocesses);
 void instance(char *cwd, int argc, char *argv[], bgp *process);
@@ -168,6 +169,29 @@ bgp *getbgpstail(bgp *bgprocess) {
         return bgprocess;
     else
         return getbgpstail(bgprocess->next);
+}
+
+/* flushbgps - flush output of complete background process
+ * @bgprocesses {bgps *} - background process struct
+ */
+void flushbgps(bgps *bgprocesses) {
+    bgp *bgpcursor = bgprocesses->head;
+    /* while there are processes to iterate over */
+    while (bgpcursor != NULL) {
+        if (bgpcursor->done == True) {
+            /* build string for process list */
+            char pidstr[8];
+            sprintf(pidstr, "%d: ", bgpcursor->pid);
+            char donestr[16];
+            strcpy(donestr, "has terminated. >");
+            /* print process string */
+            printf("\n%8s %s %s\n", pidstr, bgpcursor->argvstr, donestr);
+            /* print process output */
+            printf(bgpcursor->outputbuff);
+        }
+        printf("\nCurrent process output >");
+        bgpcursor = bgpcursor->next;
+    }
 }
 
 /* printbgpsstatus - print background process onto console

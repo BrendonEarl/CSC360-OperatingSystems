@@ -89,8 +89,9 @@ int main() {
             }
 
             /* control input */
-            if (!strcmp(reply, "bglist"))
+            if (!strcmp(reply, "bglist")) {
                 printbgpsstatus(&bgprocesses);
+            }
             else if (sizeof(reply) / sizeof(char) >= 2 && reply[0] == 'b' &&
                      reply[1] == 'g') {
                 /* snippet inspired by:
@@ -113,6 +114,7 @@ int main() {
                 /* child */
                 if (pid == 0) {
                     instance(cwd, argc - 1, &argv[1], nextbgp);
+                    break;
                 } /* parent */
                 else {
                     nextbgp->pid = pid;
@@ -152,7 +154,7 @@ void addbgp(bgps *bgprocesses, bgp *bgprocess) {
     }
     else { /* if adding onto existing list */
         bgp *bgptail = getbgpstail(bgprocesses->head); // find tail
-        bgptail->next = bgprocess;                     // assign as next on tail
+        bgptail->next = bgprocess;                     // assign as next on
         bgprocesses->count += 1;
     }
 }
@@ -191,7 +193,7 @@ void printbgpsstatus(bgps *bgprocesses) {
         printf("%8s %s %s\n", pidstr, bgpcursor->argvstr, donestr);
         bgpcursor = bgpcursor->next;
     }
-    printf("Total background jobs: %d", count);
+    printf("Total background jobs: %d\n", count);
 }
 
 /* deletebgps - iteritively frees background process structs on call

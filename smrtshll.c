@@ -89,8 +89,10 @@ int main() {
             }
 
             /* control input */
-            if (sizeof(reply) / sizeof(char) >= 2 && reply[0] == 'b' &&
-                reply[1] == 'g') {
+            if (!strcmp(reply, "bglist"))
+                printbgpsstatus(&bgprocesses);
+            else if (sizeof(reply) / sizeof(char) >= 2 && reply[0] == 'b' &&
+                     reply[1] == 'g') {
                 /* snippet inspired by:
                  * https://stackoverflow.com/questions/13274786/how-to-share-memory-between-process-fork
                  */
@@ -100,20 +102,18 @@ int main() {
 
                 nextbgp->next = NULL;
                 nextbgp->argvstr = (char *)malloc(sizeof(argvstr));
-                strcpy(nextbgp->argvstr, argvstr);
+                strcpy(nextbgp->argvstr, &argvstr[2]);
                 nextbgp->done = False;
-                nextbgp->outputbuff = NULL;
+                nextbgp->outputbuff = (char *)malloc(sizeof(4096));
 
                 pid = fork();
 
                 if (pid == 0) {
                     instance(cwd, argc - 1, &argv[1], nextbgp);
-                    break;
                 }
                 else {
                     nextbgp->pid = pid;
                     addbgp(&bgprocesses, nextbgp);
-                    printbgpsstatus(&bgprocesses);
                     while (waitpid(pid, NULL, WUNTRACED) > 0)
                         ;
                 }
@@ -164,7 +164,7 @@ void printbgpsstatus(bgps *bgprocesses) {
             strcpy(donestr, "has terminated.");
         }
         else {
-            strcpy(donestr, ".");
+            strcpy(donestr, "");
         }
         printf("%8s %s %s\n", pidstr, bgpcursor->argvstr, donestr);
         bgpcursor = bgpcursor->next;
@@ -180,6 +180,7 @@ void deletebgps(bgps bgprocesses) {
         bgp *tmpbgpcursor = bgpcursor;
         bgpcursor = bgpcursor->next;
         free(tmpbgpcursor->argvstr);
+        free(tmpbgpcursor->outputbuff);
         munmap(tmpbgpcursor, sizeof *tmpbgpcursor);
     }
 }
@@ -221,7 +222,7 @@ void basic(char *cwd, int argc, char *argv[]) {
     }
     else if (pid == 0) {
         if (execvp(argv[0], argv) < 0) {
-            printf("Error occurent whith execvp");
+            printf("Invalid command");
         }
     }
     else {

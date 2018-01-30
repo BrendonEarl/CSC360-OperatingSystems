@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <readline/history.h>
 #include <readline/readline.h>
+#include <sys/mman.h>
 
 typedef enum bool {
     False,
@@ -32,7 +33,7 @@ int main();
 bgp *getbgpstail(bgp *bgprocess);
 void addbgp(bgps *bgprocesses, bgp *bgprocess);
 void printbgpsstatus(bgps *bgprocesses);
-void deletebgps(bgps *bgprocesses);
+void deletebgps(bgps bgprocesses);
 void instance(char *cwd, int argc, char *argv[], bgp *process);
 void basic(char *cwd, int argc, char *argv[]);
 void cd(char *cwd, char *path);
@@ -90,20 +91,27 @@ int main() {
             /* control input */
             if (sizeof(reply) / sizeof(char) >= 2 && reply[0] == 'b' &&
                 reply[1] == 'g') {
-                pid = fork();
-                bgp *nextbgp = (bgp *)malloc(sizeof(bgp));
-                nextbgp->pid = pid;
+                /* snippet inspired by:
+                 * https://stackoverflow.com/questions/13274786/how-to-share-memory-between-process-fork
+                 */
+                bgp *nextbgp =
+                    mmap(NULL, sizeof nextbgp, PROT_READ | PROT_WRITE,
+                         MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+
                 nextbgp->next = NULL;
                 nextbgp->argvstr = (char *)malloc(sizeof(argvstr));
                 strcpy(nextbgp->argvstr, argvstr);
                 nextbgp->done = False;
                 nextbgp->outputbuff = NULL;
 
+                pid = fork();
+
                 if (pid == 0) {
                     instance(cwd, argc - 1, &argv[1], nextbgp);
                     break;
                 }
                 else {
+                    nextbgp->pid = pid;
                     addbgp(&bgprocesses, nextbgp);
                     printbgpsstatus(&bgprocesses);
                     while (waitpid(pid, NULL, WUNTRACED) > 0)
@@ -121,7 +129,7 @@ int main() {
         free(reply);
     }
 
-    deletebgps(&bgprocesses);
+    deletebgps(bgprocesses);
     free(prompt);
     if (bailout == True)
         printf("Bye Bye\n");
@@ -163,12 +171,16 @@ void printbgpsstatus(bgps *bgprocesses) {
     }
 }
 
-void deletebgps(bgps *bgprocesses) {
-    bgp *bgpcursor = bgprocesses->head;
+/* deletebgps - iteritively frees background process structs on call
+ * @bgprocesses {bgps} - background process struct
+ */
+void deletebgps(bgps bgprocesses) {
+    bgp *bgpcursor = bgprocesses.head;
     while (bgpcursor != NULL) {
         bgp *tmpbgpcursor = bgpcursor;
         bgpcursor = bgpcursor->next;
-        free(tmpbgpcursor);
+        free(tmpbgpcursor->argvstr);
+        munmap(tmpbgpcursor, sizeof *tmpbgpcursor);
     }
 }
 

@@ -36,8 +36,8 @@ void flushbgps(bgps *bgprocesses);
 void printbgpsstatus(bgps *bgprocesses);
 void deletebgps(bgps bgprocesses);
 void instance(char *cwd, int argc, char *argv[], bgp *process);
-void basic(char *cwd, int argc, char *argv[]);
-void cd(char *cwd, char *path);
+void basic(char *cwd, int argc, char *argv, FILE *outputbuff);
+void cd(char *cwd, char *path, FILE *outputbuff);
 char *readNextStrTok();
 char *printbuff(char *buff, char *input);
 
@@ -56,6 +56,7 @@ int main() {
         /* read stdin line in w/o prompt */
         char *reply = readline(prompt);
         printf("\n");
+        flushbgps(&bgprocesses);
 
         /* catch exit request */
         if (!strcmp(reply, "bye") || !strcmp(reply, "quit") ||
@@ -107,7 +108,7 @@ int main() {
                 nextbgp->argvstr = (char *)malloc(sizeof(argvstr));
                 strcpy(nextbgp->argvstr, &argvstr[2]);
                 nextbgp->done = False;
-                nextbgp->outputbuff = (char *)malloc(sizeof(4096));
+                nextbgp->outputbuff = fmemopen(NULL, 0, "a+");
 
                 /* start fork */
                 pid = fork();
@@ -115,13 +116,16 @@ int main() {
                 /* child */
                 if (pid == 0) {
                     instance(cwd, argc - 1, &argv[1], nextbgp);
-                    break;
+                    free(replycpy);
+                    free(argvstr);
+                    free(reply);
+                    exit(1);
                 } /* parent */
                 else {
                     nextbgp->pid = pid;
                     addbgp(&bgprocesses, nextbgp);
                     /* wait - to be taken out once buffers handled */
-                    while (waitpid(pid, NULL, WUNTRACED) > 0)
+                    while (waitpid(pid, NULL, WNOHANG) > 0)
                         ;
                 }
             }
@@ -187,7 +191,10 @@ void flushbgps(bgps *bgprocesses) {
             /* print process string */
             printf("\n%8s %s %s\n", pidstr, bgpcursor->argvstr, donestr);
             /* print process output */
-            printf(bgpcursor->outputbuff);
+            char *str;
+            // while ((bgpcursor->outputbuff = fgetc(str)) != EOF) {
+            //     printf("%s\n", str);
+            // };
         }
         printf("\nCurrent process output >");
         bgpcursor = bgpcursor->next;
@@ -239,16 +246,22 @@ void deletebgps(bgps bgprocesses) {
 /* instance - handles args
  * @cwd {char *} - current working directory string
  * @argc {int} - number of arguments
- * @argv {char* []} pointer to array of arguments
- * @process {bgp *} pointer background process struct
+ * @argv {char* []} - pointer to array of arguments
+ * @process {bgp *} - pointer background process struct
  */
 void instance(char *cwd, int argc, char *argv[], bgp *process) {
     if (argc >= 1) {
         if (!strcmp(argv[0], "cd") && argc >= 2) {
-            cd(cwd, argv[1]);
+            if (process == NULL)
+                cd(cwd, argv[1], NULL);
+            else
+                cd(cwd, argv[1], process->outputbuff);
         }
         else {
-            basic(cwd, argc, argv);
+            if (process == NULL)
+                basic(cwd, argc, argv, NULL);
+            else
+                basic(cwd, argc, process->argvstr, process->outputbuff);
         }
         if (process != NULL) {
             process->done = True;
@@ -260,35 +273,45 @@ void instance(char *cwd, int argc, char *argv[], bgp *process) {
 /* basic - calls command passed in with arguments using execvp
  * @cwd {char *} - current working directory string
  * @argc {int} - number of arguments
- * @argv {char* []} pointer to array of arguments
+ * @argv {char* []} - pointer to array of arguments
+ * @outputbuff {FILE *} - pointer to output buffer
  */
-void basic(char *cwd, int argc, char *argv[]) {
+void basic(char *cwd, int argc, char *argvstr, FILE *outputbuff) {
     /* snippet inspired by:
      * http://www.csl.mtu.edu/cs4411.ck/www/NOTES/process/fork/exec.html
      */
     // fork and execute command passed in
-    pid_t pid = fork();
-    if (pid < 0) {
-        printf("Error occured when forking");
-    }
-    else if (pid == 0) {
-        if (execvp(argv[0], argv) < 0) {
-            printf("Invalid command");
-        }
-    }
-    else {
-        while (waitpid(pid, NULL, WUNTRACED) > 0)
-            ;
-    }
-
+    // if (outputbuff != NULL) {
+    // outputbuff = popen(argvstr, "r");
     return;
+    // }
+    // else {
+    //     pid_t pid = fork();
+    //     if (pid < 0) {
+    //         fprintf(outputbuff != NULL ? outputbuff : stdout,
+    //                 "Error occured when forking");
+    //     }
+    //     else if (pid == 0) {
+    //         if (execvp(argvstr, argvstr) < 0) {
+    //             fprintf(outputbuff != NULL ? outputbuff : stdout,
+    //                     "Invalid command");
+    //         }
+    //     }
+    //     else {
+    //         while (waitpid(pid, NULL, WUNTRACED) > 0)
+    //             ;
+    //     }
+    // }
+
+    // return;
 }
 
 /* cd - change directory
  * @cwd {char *} - current working directory string
  * @path {char *} - path argument to move directories
+ * @outputbuff {FILE *} - pointer to output buffer
  */
-void cd(char *cwd, char *path) {
+void cd(char *cwd, char *path, FILE *outputbuff) {
     DIR *dir;
     char nextpath[256];
     nextpath[0] = '\0';
@@ -326,12 +349,14 @@ void cd(char *cwd, char *path) {
     if (dir) {
         chdir(nextpath);
     }
-    else if (ENOENT == errno) {
-        printf("Path does not exist");
-    }
-    else {
-        printf("Unexpected error has occured");
-    }
+    // else if (ENOENT == errno) {
+    //     fprintf(outputbuff != NULL ? outputbuff : stdout,
+    //             "Path does not exist");
+    // }
+    // else {
+    //     fprintf(outputbuff != NULL ? outputbuff : stdout,
+    //             "Unexpected error has occured");
+    // }
     return;
 }
 

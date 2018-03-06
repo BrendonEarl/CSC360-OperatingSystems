@@ -2,15 +2,16 @@
 #include <string>
 #include "trainDetails.h"
 
-class Train
+struct Train
 {
 public:
   Train();
-  Train(char dir, int lt, int ct);
+  Train(std::string dir, int lt, int ct);
   Priority getPriority();
   Direction getDirection();
   float getLoadTime();
   float getCrossTime();
+  pthread_t thread;
 
 private:
   bool initialized;
@@ -23,43 +24,40 @@ private:
 Train::Train()
 {
   initialized = false;
+  thread = NULL;
 }
 
-Train::Train(char dr, int lt, int ct)
+Train::Train(std::string dr, int lt, int ct)
 {
-  // code snippet inspired by SO answer: https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c/14266139
-  std::string token;
-  size_t pos;
-
   dir = WEST;
 
-  if (dr == *"E")
+  if (dr.compare("E"))
   {
     pri = HIGH;
     dir = EAST;
   }
-  else if (dr == *"e")
+  else if (dr.compare("e"))
   {
     pri = LOW;
     dir = EAST;
   }
-  else if (dr == *"W")
+  else if (dr.compare("W"))
   {
     pri = HIGH;
     dir = WEST;
   }
-  else if (dr == *"w")
+  else if (dr.compare("w"))
   {
     pri = LOW;
     dir = WEST;
   }
-  loadTime = float(lt) / 10.0;
-  crossTime = float(ct) / 10.0;
+  loadTime = lt;
+  crossTime = ct;
 
   initialized = true;
 
   //TODO: figure out why dir is empty and everything is cast to ints
-  std::cout << "entry intialized: dir: " << Direction(dir) << " pri: " << Priority(pri) << " load time: " << loadTime << " cross time: " << crossTime << std::endl;
+  std::cout << "Train intialized: dir: " << Direction(dir) << " pri: " << Priority(pri) << " load time: " << loadTime << " cross time: " << crossTime << std::endl;
 }
 
 Priority Train::getPriority()
@@ -88,4 +86,8 @@ float Train::getCrossTime()
   if (initialized == false)
     throw std::runtime_error("Train not yet initialized");
   return crossTime;
+}
+
+void load()
+{
 }

@@ -6,7 +6,7 @@ class Entry
 {
   public:
     Entry();
-    Entry(std::string entryTxt);
+    Entry(char dir, int lt, int ct);
     bool setNext(Entry &nextEntry);
     Priority getPriority();
     Direction getDirection();
@@ -29,55 +29,42 @@ Entry::Entry()
     nextSet = false;
 }
 
-Entry::Entry(std::string entryTxt)
+Entry::Entry(char dr, int lt, int ct)
 {
     // code snippet inspired by SO answer: https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c/14266139
     std::string token;
     size_t pos;
 
-    // parse entry text
-    for (int i = 0; i < 3; i++)
+    dir = WEST;
+
+    if (dr == *"E")
     {
-        pos = entryTxt.find(" ");
-        token = entryTxt.substr(0, pos);
-
-        if (i == 0)
-        {
-            if (token.compare("E") != 0)
-            {
-                pri = HIGH;
-                dir = EAST;
-            }
-            else if (token.compare("e") != 0)
-            {
-                pri = LOW;
-                dir = EAST;
-            }
-            else if (token.compare("W") != 0)
-            {
-                pri = HIGH;
-                dir = WEST;
-            }
-            else if (token.compare("w") != 0)
-            {
-                pri = LOW;
-                dir = WEST;
-            }
-        }
-        else if (i == 1)
-        {
-            loadTime = float(atoi(token.c_str()) / 10);
-        }
-        else if (i == 2)
-        {
-            crossTime = float(atoi(token.c_str()) / 10);
-        }
-
-        entryTxt.erase(0, pos + 1);
+        pri = HIGH;
+        dir = EAST;
     }
+    else if (dr == *"e")
+    {
+        pri = LOW;
+        dir = EAST;
+    }
+    else if (dr == *"W")
+    {
+        pri = HIGH;
+        dir = WEST;
+    }
+    else if (dr == *"w")
+    {
+        pri = LOW;
+        dir = WEST;
+    }
+    loadTime = float(lt / 10.0);
+    crossTime = float(ct / 10.0);
 
     initialized = true;
     nextSet = false;
+
+    //TODO: figure out why dir is empty and everything is cast to ints
+    std::cout << "entry intialized: dir: " << Direction(dir) << " pri: " << Priority(pri) << " load time: " << loadTime << " cross time: " << crossTime << std::endl;
 }
 
 bool Entry::setNext(Entry &nextEntry)

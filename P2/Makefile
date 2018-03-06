@@ -5,19 +5,19 @@ trnschdl: trnschdl.cpp
 	g++ trnschdl.cpp -g -o trnschdl
 
 entry: entry.cpp
-	g++ entry.cpp -g -o entry
+	g++ -c entry.cpp -g -o entry
 
 schedule: schedule.cpp
-	g++ schedule.cpp -g -o schedule
+	g++ -c schedule.cpp -g -o schedule
 
 dispatcher: dispatcher.cpp
-	g++ dispatcher.cpp -g -o dispatcher
+	g++ -c dispatcher.cpp -g -o dispatcher
 
 station: station.cpp
-	g++ station.cpp -g -o station
+	g++ -c station.cpp -g -o station
 
 train: train.cpp
-	g++ train.cpp -g -o train
+	g++ -c train.cpp -g -o train
 
 .PHONY clean:
 clean:

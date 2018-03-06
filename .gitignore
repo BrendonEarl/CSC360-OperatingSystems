@@ -1,6 +1,7 @@
 .DS_Store
 args
 inf
-smrtshll
-smrtshll.dSYM/**/*.*
+P1/smrtshll
+P2/trnschdl
+*.dSYM/
 .vscode

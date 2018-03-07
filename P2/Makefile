@@ -2,7 +2,7 @@
 all: trnschdl
 
 trnschdl: trnschdl.cpp dispatcher.cpp station.cpp train.cpp train.h
-	g++ trnschdl.cpp -g -o trnschdl
+	g++ -pthread -g -o trnschdl trnschdl.cpp
 
 .PHONY clean:
 clean:

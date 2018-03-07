@@ -23,6 +23,21 @@ typedef struct Train
     float crossTime;
 } Train;
 
+Train *newTrain(void)
+{
+    Train *nextTrain = (Train *)malloc(sizeof(Train));
+    return nextTrain;
+}
+
+void delTrain(Train *train)
+{
+    if (train != NULL)
+    {
+        free(train);
+    }
+    return;
+}
+
 typedef struct Station
 {
     Train *trainQueue;
@@ -51,9 +66,23 @@ typedef struct TrainThreadArgs
     bool *startSignal;
     Train *stationInput;
     pthread_cond_t *inputSignal;
-    pthread_mutex_t *coutSignal;
-    pthread_cond_t *coutMutex;
+    pthread_mutex_t *coutMutex;
+    pthread_cond_t *coutCond;
 } TrainThreadArgs;
+
+TrainThreadArgs *newTrainThreadArgs()
+{
+    TrainThreadArgs *nextTrainthreadArgs = (TrainThreadArgs *)malloc(sizeof(TrainThreadArgs));
+    return nextTrainthreadArgs;
+}
+
+void delTrainThreadArgs(TrainThreadArgs *trainThreadArgs)
+{
+    if (trainThreadArgs != NULL)
+    {
+        free(trainThreadArgs);
+    }
+}
 
 typedef struct StationThreadArgs
 {

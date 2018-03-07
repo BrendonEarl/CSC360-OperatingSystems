@@ -31,10 +31,11 @@ void *createTrain(void *args)
   thisTrain->loadTime = float(trainArgs->loadTimeInput) / 10;
   thisTrain->crossTime = float(trainArgs->crossTimeInput) / 10;
 
-  //TODO: figure out why dir is empty and everything is cast to ints
-  std::cout << "number: "
+  pthread_mutex_lock(trainArgs->coutMutex);
+  // pthread_cond_wait(trainArgs->coutCond, trainArgs->coutMutex);
+  std::cout << "Train "
             << thisTrain->number
-            << " Train intialized: dir: "
+            << " intialized. dir: "
             << thisTrain->direction
             << " pri: "
             << thisTrain->priority
@@ -44,8 +45,20 @@ void *createTrain(void *args)
             << thisTrain->crossTime
             << std::endl;
 
-  std::cout << "train " << trainArgs->train.number << " waiting for signal" << std::endl;
-  while (*trainArgs->startSignal == false)
+  std::cout << "Train " << trainArgs->train.number << " waiting for signal" << std::endl;
+  // pthread_cond_signal(trainArgs->coutCond);
+  pthread_mutex_unlock(trainArgs->coutMutex);
+
+  while (*trainArgs->startSignal == 0)
     ;
-  std::cout << "train " << trainArgs->train.number << " released and loading" << std::endl;
+
+  pthread_mutex_lock(trainArgs->coutMutex);
+  // pthread_cond_wait(trainArgs->coutCond, trainArgs->coutMutex);
+
+  std::cout << "Train " << trainArgs->train.number << " released and loading" << std::endl;
+  // pthread_cond_signal(trainArgs->coutCond);
+  pthread_mutex_unlock(trainArgs->coutMutex);
+
+  
+  pthread_exit(NULL);
 }

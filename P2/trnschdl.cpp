@@ -1,7 +1,6 @@
 #include <fstream>
 #include "train.cpp"
 #include "station.cpp"
-#include "schedule.cpp"
 #include "dispatcher.cpp"
 
 int main(int argc, char *argv[])
@@ -10,17 +9,21 @@ int main(int argc, char *argv[])
     {
         std::cout << "Incorrect number of params" << std::endl;
     }
-    std::cout << "test" << std::endl;
-    // Steam file in
+    // Stream file in
     std::ifstream infile(argv[1]);
-    // train direction
-    char dir;
-    // load and crossing time
-    int lt, ct;
+    // Stream line
+    std::string trainEntry;
     // parse all
-    while (infile >> dir >> lt >> ct)
+    while (std::getline(infile, trainEntry))
     {
-        std::cout << dir << " " << lt << " " << ct << std::endl;
+        TrainThreadArgs trainThreadArgs;
+
+        trainThreadArgs.trainNumber = 1;
+
+        std::istringstream iss(trainEntry);
+        iss >> trainThreadArgs.travelInput >> trainThreadArgs.loadTimeInput >> trainThreadArgs.crossTimeInput;
+        std::cout << "Reading in: " << trainThreadArgs.travelInput << " " << trainThreadArgs.loadTimeInput << " " << trainThreadArgs.crossTimeInput << std::endl;
+        createTrain(&trainThreadArgs);
     }
     return 0;
 };

@@ -3,16 +3,31 @@
 
 #include <sstream>
 #include <pthread.h>
+#include <queue>
 
 #include <unistd.h>
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <sys/time.h>
 
 typedef enum Direction {
     EAST,
     WEST
 } Direction;
+
+std::string getDirection(Direction dir)
+{
+    if (dir == EAST)
+    {
+        return "East";
+    }
+    else if (dir == WEST)
+    {
+        return "West";
+    }
+    return NULL;
+}
 
 typedef enum Priority {
     LOW,
@@ -27,6 +42,14 @@ typedef struct Train
     float loadTime;
     float crossTime;
     long int timeLoaded;
+    bool operator<(const Train &rhs) const
+    {
+        if (priority == rhs.priority)
+        {
+            return timeLoaded < rhs.timeLoaded;
+        }
+        return priority < rhs.priority;
+    }
 } Train;
 
 Train *newTrain(void)
@@ -46,12 +69,13 @@ void delTrain(Train *train)
 
 typedef struct Station
 {
-    Train *trainQueue;
+    std::priority_queue<Train> trainQueue;
     pthread_mutex_t trainQueueMutex;
     Train *stationInput;
     pthread_mutex_t inputMutex;
-    pthread_cond_t inputCond;
+    pthread_cond_t inputSignal;
     pthread_cond_t inputEmpty;
+
 } Station;
 
 typedef struct Stations
@@ -80,7 +104,6 @@ typedef struct TrainThreadArgs
     bool *startSignal;
     Stations *stations;
     pthread_mutex_t *coutMutex;
-    pthread_cond_t *coutCond;
     long int *startTime;
 } TrainThreadArgs;
 
@@ -100,14 +123,23 @@ void delTrainThreadArgs(TrainThreadArgs *trainThreadArgs)
 
 typedef struct StationThreadArgs
 {
-    Station stationInfo;
-    pthread_cond_t waitingTrainSignal;
+    Station *stationInfo;
+    pthread_mutex_t *coutMutex;
+    pthread_cond_t *waitingTrainSignal;
 } StationThreadArgs;
 
 typedef struct DispatcherThreadArgs
 {
     Dispatcher dispatcherInfo;
 } DispatcherThreadArgs;
+
+long int timestamp()
+{
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    long int timestamp = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+    return timestamp;
+}
 
 void announce(long int time, std::string out)
 {

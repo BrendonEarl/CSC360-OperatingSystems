@@ -2,44 +2,50 @@
 #include <string>
 #include "train.h"
 
-void createTrain(void *args)
+void *createTrain(void *args)
 {
   TrainThreadArgs *trainArgs = (TrainThreadArgs *)args;
+  Train *thisTrain = &trainArgs->train;
 
   if (trainArgs->travelInput.compare("E") == 0)
   {
-    trainArgs->train.priority = HIGH;
-    trainArgs->train.direction = EAST;
+    thisTrain->priority = HIGH;
+    thisTrain->direction = EAST;
   }
   else if (trainArgs->travelInput.compare("e") == 0)
   {
-    trainArgs->train.priority = LOW;
-    trainArgs->train.direction = EAST;
+    thisTrain->priority = LOW;
+    thisTrain->direction = EAST;
   }
   else if (trainArgs->travelInput.compare("W") == 0)
   {
-    trainArgs->train.priority = HIGH;
-    trainArgs->train.direction = WEST;
+    thisTrain->priority = HIGH;
+    thisTrain->direction = WEST;
   }
   else if (trainArgs->travelInput.compare("w") == 0)
   {
-    trainArgs->train.priority = LOW;
-    trainArgs->train.direction = WEST;
+    thisTrain->priority = LOW;
+    thisTrain->direction = WEST;
   }
-  trainArgs->train.number = trainArgs->numberInput;
-  trainArgs->train.loadTime = float(trainArgs->loadTimeInput) / 10;
-  trainArgs->train.crossTime = float(trainArgs->crossTimeInput) / 10;
+  thisTrain->number = trainArgs->numberInput;
+  thisTrain->loadTime = float(trainArgs->loadTimeInput) / 10;
+  thisTrain->crossTime = float(trainArgs->crossTimeInput) / 10;
 
   //TODO: figure out why dir is empty and everything is cast to ints
   std::cout << "number: "
-            << trainArgs->train.number
+            << thisTrain->number
             << " Train intialized: dir: "
-            << trainArgs->train.direction
+            << thisTrain->direction
             << " pri: "
-            << trainArgs->train.priority
+            << thisTrain->priority
             << " load time: "
-            << trainArgs->train.loadTime
+            << thisTrain->loadTime
             << " cross time: "
-            << trainArgs->train.crossTime
+            << thisTrain->crossTime
             << std::endl;
+
+  std::cout << "train " << trainArgs->train.number << " waiting for signal" << std::endl;
+  while (*trainArgs->startSignal == false)
+    ;
+  std::cout << "train " << trainArgs->train.number << " released and loading" << std::endl;
 }

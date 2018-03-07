@@ -48,8 +48,11 @@ typedef struct TrainThreadArgs
     int loadTimeInput;
     int crossTimeInput;
     Train train;
+    bool *startSignal;
     Train *stationInput;
-    pthread_cond_t inputSignal;
+    pthread_cond_t *inputSignal;
+    pthread_mutex_t *coutSignal;
+    pthread_cond_t *coutMutex;
 } TrainThreadArgs;
 
 typedef struct StationThreadArgs

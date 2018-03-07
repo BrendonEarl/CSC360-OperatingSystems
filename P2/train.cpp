@@ -34,7 +34,6 @@ void *createTrain(void *args)
   thisTrain->crossTime = float(trainArgs->crossTimeInput) / 10;
 
   pthread_mutex_lock(trainArgs->coutMutex);
-  // pthread_cond_wait(trainArgs->coutCond, trainArgs->coutMutex);
   std::cout << "Train "
             << std::setw(2) << std::right
             << thisTrain->number
@@ -49,17 +48,13 @@ void *createTrain(void *args)
             << std::endl;
 
   std::cout << "Train " << trainArgs->train.number << " waiting for signal" << std::endl;
-  // pthread_cond_signal(trainArgs->coutCond);
   pthread_mutex_unlock(trainArgs->coutMutex);
 
   while (*trainArgs->startSignal == 0)
     ;
 
   pthread_mutex_lock(trainArgs->coutMutex);
-  // pthread_cond_wait(trainArgs->coutCond, trainArgs->coutMutex);
-
   std::cout << "Train " << trainArgs->train.number << " released and loading for " << thisTrain->loadTime << "sec" << std::endl;
-  // pthread_cond_signal(trainArgs->coutCond);
   pthread_mutex_unlock(trainArgs->coutMutex);
 
   struct timespec tim, tim2;
@@ -74,20 +69,21 @@ void *createTrain(void *args)
   pthread_mutex_lock(trainArgs->coutMutex);
   long int completeLoadTime = thisTrain->timeLoaded - *(trainArgs->startTime);
   std::stringstream output;
-  output << "Train " << thisTrain->number << " finished loading ";
+  output << "Train " << std::setw(2) << std::left << thisTrain->number << " finished loading ";
   announce(completeLoadTime, output.str());
   pthread_mutex_unlock(trainArgs->coutMutex);
 
   if (thisTrain->direction == EAST)
   {
-    pthread_cond_wait(&trainArgs->stations->west->inputEmpty, &trainArgs->stations->west->inputMutex);
+    std::cout << "pushign" << std::endl;
     pthread_mutex_lock(&trainArgs->stations->west->inputMutex);
-    pthread_cond_wait(&trainArgs->stations->west->inputCond, &trainArgs->stations->west->inputMutex);
+    // pthread_cond_wait(&trainArgs->stations->west->inputEmpty, &trainArgs->stations->west->inputMutex);
     trainArgs->stations->west->stationInput = thisTrain;
+    std::cout << "pushed--" << std::endl;
     pthread_mutex_unlock(&trainArgs->stations->west->inputMutex);
-    pthread_cond_broadcast(&trainArgs->stations->west->inputCond);
+    pthread_cond_signal(&trainArgs->stations->west->inputSignal);
   }
 
-  delTrainThreadArgs(trainArgs);
+  // delTrainThreadArgs(trainArgs);
   pthread_exit(NULL);
 }

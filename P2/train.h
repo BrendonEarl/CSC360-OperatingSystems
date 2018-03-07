@@ -21,6 +21,7 @@ typedef struct Train
     int number;
     float loadTime;
     float crossTime;
+    long int timeLoaded;
 } Train;
 
 Train *newTrain(void)
@@ -44,7 +45,14 @@ typedef struct Station
     pthread_mutex_t trainQueueMutex;
     Train *stationInput;
     pthread_cond_t inputSignal;
+    pthread_cond_t inputEmpty;
 } Station;
+
+typedef struct Stations
+{
+    Station *east;
+    Station *west;
+} Stations;
 
 typedef struct Dispatcher
 {
@@ -64,10 +72,10 @@ typedef struct TrainThreadArgs
     int crossTimeInput;
     Train train;
     bool *startSignal;
-    Train *stationInput;
-    pthread_cond_t *inputSignal;
+    Stations *stations;
     pthread_mutex_t *coutMutex;
     pthread_cond_t *coutCond;
+    long int *startTime;
 } TrainThreadArgs;
 
 TrainThreadArgs *newTrainThreadArgs()

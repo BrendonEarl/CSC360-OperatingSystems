@@ -4,6 +4,11 @@
 #include <sstream>
 #include <pthread.h>
 
+#include <unistd.h>
+#include <string>
+#include <iostream>
+#include <iomanip>
+
 typedef enum Direction {
     EAST,
     WEST
@@ -44,7 +49,8 @@ typedef struct Station
     Train *trainQueue;
     pthread_mutex_t trainQueueMutex;
     Train *stationInput;
-    pthread_cond_t inputSignal;
+    pthread_mutex_t inputMutex;
+    pthread_cond_t inputCond;
     pthread_cond_t inputEmpty;
 } Station;
 
@@ -102,5 +108,24 @@ typedef struct DispatcherThreadArgs
 {
     Dispatcher dispatcherInfo;
 } DispatcherThreadArgs;
+
+void announce(long int time, std::string out)
+{
+    std::cout
+        << std::setfill('0') << std::setw(2)
+        << ((time / 1000) / 3600)
+        << ":"
+        << std::setfill('0') << std::setw(2)
+        << ((time / 1000) / 60) % 60
+        << ":"
+        << std::setfill('0') << std::setw(2)
+        << (time / 1000) % 60
+        << ":"
+        << std::setw(1)
+        << (time % 1000) / 100
+        << " "
+        << out
+        << std::endl;
+}
 
 #endif

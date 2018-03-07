@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <sys/time.h>
-#include <unistd.h>
+#include <iomanip>
 #include "train.h"
 
 void *createTrain(void *args)
@@ -36,6 +36,7 @@ void *createTrain(void *args)
   pthread_mutex_lock(trainArgs->coutMutex);
   // pthread_cond_wait(trainArgs->coutCond, trainArgs->coutMutex);
   std::cout << "Train "
+            << std::setw(2) << std::right
             << thisTrain->number
             << " intialized. dir: "
             << thisTrain->direction
@@ -71,8 +72,21 @@ void *createTrain(void *args)
   thisTrain->timeLoaded = tp.tv_sec * 1000 + tp.tv_usec / 1000;
 
   pthread_mutex_lock(trainArgs->coutMutex);
-  std::cout << "Train " << trainArgs->train.number << " finished loading at " << thisTrain->timeLoaded - *(trainArgs->startTime) << std::endl;
+  long int completeLoadTime = thisTrain->timeLoaded - *(trainArgs->startTime);
+  std::stringstream output;
+  output << "Train " << thisTrain->number << " finished loading ";
+  announce(completeLoadTime, output.str());
   pthread_mutex_unlock(trainArgs->coutMutex);
+
+  if (thisTrain->direction == EAST)
+  {
+    pthread_cond_wait(&trainArgs->stations->west->inputEmpty, &trainArgs->stations->west->inputMutex);
+    pthread_mutex_lock(&trainArgs->stations->west->inputMutex);
+    pthread_cond_wait(&trainArgs->stations->west->inputCond, &trainArgs->stations->west->inputMutex);
+    trainArgs->stations->west->stationInput = thisTrain;
+    pthread_mutex_unlock(&trainArgs->stations->west->inputMutex);
+    pthread_cond_broadcast(&trainArgs->stations->west->inputCond);
+  }
 
   delTrainThreadArgs(trainArgs);
   pthread_exit(NULL);

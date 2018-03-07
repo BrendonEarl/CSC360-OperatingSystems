@@ -59,6 +59,6 @@ void *createTrain(void *args)
   // pthread_cond_signal(trainArgs->coutCond);
   pthread_mutex_unlock(trainArgs->coutMutex);
 
-  
+  delTrainThreadArgs(trainArgs);
   pthread_exit(NULL);
 }

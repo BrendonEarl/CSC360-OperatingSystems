@@ -18,6 +18,7 @@ typedef struct Train
 {
     Priority priority;
     Direction direction;
+    int number;
     float loadTime;
     float crossTime;
 } Train;
@@ -42,8 +43,8 @@ typedef struct Dispatcher
 
 typedef struct TrainThreadArgs
 {
-    int trainNumber;
     std::string travelInput;
+    int numberInput;
     int loadTimeInput;
     int crossTimeInput;
     Train train;

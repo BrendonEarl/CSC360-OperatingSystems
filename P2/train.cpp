@@ -6,31 +6,34 @@ void createTrain(void *args)
 {
   TrainThreadArgs *trainArgs = (TrainThreadArgs *)args;
 
-  if (trainArgs->travelInput.compare("E"))
+  if (trainArgs->travelInput.compare("E") == 0)
   {
     trainArgs->train.priority = HIGH;
     trainArgs->train.direction = EAST;
   }
-  else if (trainArgs->travelInput.compare("e"))
+  else if (trainArgs->travelInput.compare("e") == 0)
   {
     trainArgs->train.priority = LOW;
     trainArgs->train.direction = EAST;
   }
-  else if (trainArgs->travelInput.compare("W"))
+  else if (trainArgs->travelInput.compare("W") == 0)
   {
     trainArgs->train.priority = HIGH;
     trainArgs->train.direction = WEST;
   }
-  else if (trainArgs->travelInput.compare("w"))
+  else if (trainArgs->travelInput.compare("w") == 0)
   {
     trainArgs->train.priority = LOW;
     trainArgs->train.direction = WEST;
   }
+  trainArgs->train.number = trainArgs->numberInput;
   trainArgs->train.loadTime = float(trainArgs->loadTimeInput) / 10;
   trainArgs->train.crossTime = float(trainArgs->crossTimeInput) / 10;
 
   //TODO: figure out why dir is empty and everything is cast to ints
-  std::cout << "Train intialized: dir: "
+  std::cout << "number: "
+            << trainArgs->train.number
+            << " Train intialized: dir: "
             << trainArgs->train.direction
             << " pri: "
             << trainArgs->train.priority

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <sys/time.h>
 #include <unistd.h>
 #include "train.h"
 
@@ -62,11 +63,15 @@ void *createTrain(void *args)
 
   struct timespec tim, tim2;
   tim.tv_sec = (long)thisTrain->loadTime;
-  tim.tv_nsec = ((long)thisTrain->loadTime * 1000000000L) % 1000000000L;
+  tim.tv_nsec = (long)(thisTrain->loadTime * 1000000000L) % 1000000000L;
   nanosleep(&tim, &tim2);
 
+  struct timeval tp;
+  gettimeofday(&tp, NULL);
+  thisTrain->timeLoaded = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+
   pthread_mutex_lock(trainArgs->coutMutex);
-  std::cout << "Train " << trainArgs->train.number << " finished loading" << std::endl;
+  std::cout << "Train " << trainArgs->train.number << " finished loading at " << thisTrain->timeLoaded - *(trainArgs->startTime) << std::endl;
   pthread_mutex_unlock(trainArgs->coutMutex);
 
   delTrainThreadArgs(trainArgs);

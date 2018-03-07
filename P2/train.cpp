@@ -1,93 +1,42 @@
 #include <iostream>
 #include <string>
-#include "trainDetails.h"
+#include "train.h"
 
-struct Train
+void createTrain(void *args)
 {
-public:
-  Train();
-  Train(std::string dir, int lt, int ct);
-  Priority getPriority();
-  Direction getDirection();
-  float getLoadTime();
-  float getCrossTime();
-  pthread_t thread;
+  TrainThreadArgs *trainArgs = (TrainThreadArgs *)args;
 
-private:
-  bool initialized;
-  Priority pri;
-  Direction dir;
-  float loadTime;
-  float crossTime;
-};
-
-Train::Train()
-{
-  initialized = false;
-  thread = NULL;
-}
-
-Train::Train(std::string dr, int lt, int ct)
-{
-  dir = WEST;
-
-  if (dr.compare("E"))
+  if (trainArgs->travelInput.compare("E"))
   {
-    pri = HIGH;
-    dir = EAST;
+    trainArgs->train.priority = HIGH;
+    trainArgs->train.direction = EAST;
   }
-  else if (dr.compare("e"))
+  else if (trainArgs->travelInput.compare("e"))
   {
-    pri = LOW;
-    dir = EAST;
+    trainArgs->train.priority = LOW;
+    trainArgs->train.direction = EAST;
   }
-  else if (dr.compare("W"))
+  else if (trainArgs->travelInput.compare("W"))
   {
-    pri = HIGH;
-    dir = WEST;
+    trainArgs->train.priority = HIGH;
+    trainArgs->train.direction = WEST;
   }
-  else if (dr.compare("w"))
+  else if (trainArgs->travelInput.compare("w"))
   {
-    pri = LOW;
-    dir = WEST;
+    trainArgs->train.priority = LOW;
+    trainArgs->train.direction = WEST;
   }
-  loadTime = lt;
-  crossTime = ct;
-
-  initialized = true;
+  trainArgs->train.loadTime = float(trainArgs->loadTimeInput) / 10;
+  trainArgs->train.crossTime = float(trainArgs->crossTimeInput) / 10;
 
   //TODO: figure out why dir is empty and everything is cast to ints
-  std::cout << "Train intialized: dir: " << Direction(dir) << " pri: " << Priority(pri) << " load time: " << loadTime << " cross time: " << crossTime << std::endl;
-}
-
-Priority Train::getPriority()
-{
-  if (initialized == false)
-    throw std::runtime_error("Train not yet initialized");
-  return pri;
-}
-
-Direction Train::getDirection()
-{
-  if (initialized == false)
-    throw std::runtime_error("Train not yet initialized");
-  return dir;
-}
-
-float Train::getLoadTime()
-{
-  if (initialized == false)
-    throw std::runtime_error("Train not yet initialized");
-  return loadTime;
-}
-
-float Train::getCrossTime()
-{
-  if (initialized == false)
-    throw std::runtime_error("Train not yet initialized");
-  return crossTime;
-}
-
-void load()
-{
+  std::cout << "Train intialized: dir: "
+            << trainArgs->train.direction
+            << " pri: "
+            << trainArgs->train.priority
+            << " load time: "
+            << trainArgs->train.loadTime
+            << " cross time: "
+            << trainArgs->train.crossTime
+            << std::endl;
 }

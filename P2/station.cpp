@@ -10,8 +10,8 @@ void *createStation(void *args)
 
     while (true)
     {
-        // pthread_cond_broadcast(&thisStation->inputEmpty);
         pthread_mutex_lock(&thisStation->trainQueueMutex);
+        pthread_cond_broadcast(&thisStation->inputEmpty);
         pthread_cond_wait(&thisStation->inputSignal, &thisStation->trainQueueMutex);
         thisStation->trainQueue.push(thisStation->stationInput);
         thisStation->stationInput = NULL;

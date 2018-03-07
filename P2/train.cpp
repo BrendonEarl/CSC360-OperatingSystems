@@ -76,7 +76,7 @@ void *createTrain(void *args)
   if (thisTrain->direction == EAST)
   {
     pthread_mutex_lock(&trainArgs->stations->west->inputMutex);
-    // pthread_cond_wait(&trainArgs->stations->west->inputEmpty, &trainArgs->stations->west->inputMutex);
+    pthread_cond_wait(&trainArgs->stations->west->inputEmpty, &trainArgs->stations->west->inputMutex);
     trainArgs->stations->west->stationInput = trainArgs->trainThread;
     pthread_mutex_unlock(&trainArgs->stations->west->inputMutex);
     pthread_cond_signal(&trainArgs->stations->west->inputSignal);
@@ -84,7 +84,7 @@ void *createTrain(void *args)
   else if (thisTrain->direction == WEST)
   {
     pthread_mutex_lock(&trainArgs->stations->east->inputMutex);
-    // pthread_cond_wait(&trainArgs->stations->east->inputEmpty, &trainArgs->stations->east->inputMutex);
+    pthread_cond_wait(&trainArgs->stations->east->inputEmpty, &trainArgs->stations->east->inputMutex);
     trainArgs->stations->east->stationInput = trainArgs->trainThread;
     pthread_mutex_unlock(&trainArgs->stations->east->inputMutex);
     pthread_cond_signal(&trainArgs->stations->east->inputSignal);

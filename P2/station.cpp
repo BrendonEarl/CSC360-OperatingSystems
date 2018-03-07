@@ -13,8 +13,7 @@ void *createStation(void *args)
         // pthread_cond_broadcast(&thisStation->inputEmpty);
         pthread_mutex_lock(&thisStation->trainQueueMutex);
         pthread_cond_wait(&thisStation->inputSignal, &thisStation->trainQueueMutex);
-        thisStation->trainQueue.push(*thisStation->stationInput);
-        std::cout << thisStation->trainQueue.top().number;
+        thisStation->trainQueue.push(thisStation->stationInput);
         thisStation->stationInput = NULL;
         pthread_mutex_unlock(&thisStation->trainQueueMutex);
 
@@ -22,11 +21,10 @@ void *createStation(void *args)
         std::stringstream output;
         output << "Train "
                << std::setw(2) << std::left
-               << thisStation->trainQueue.top().number
+               << thisStation->trainQueue.top()->train->number
                << " queued and ready to go "
-               << getDirection(thisStation->trainQueue.top().direction)
-               << std::endl;
-        announce(timestamp(), output.str());
+               << getDirection(thisStation->trainQueue.top()->train->direction);
+        announce(timestamp() - *(stationArgs->startTime), output.str());
         pthread_mutex_unlock(stationArgs->coutMutex);
     }
 }

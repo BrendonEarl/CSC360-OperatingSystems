@@ -42,14 +42,6 @@ typedef struct Train
     float loadTime;
     float crossTime;
     long int timeLoaded;
-    bool operator<(const Train &rhs) const
-    {
-        if (priority == rhs.priority)
-        {
-            return timeLoaded < rhs.timeLoaded;
-        }
-        return priority < rhs.priority;
-    }
 } Train;
 
 Train *newTrain(void)
@@ -67,11 +59,41 @@ void delTrain(Train *train)
     return;
 }
 
+typedef struct TrainThread
+{
+    Train *train;
+    pthread_t *thread;
+    bool operator<(const TrainThread &rhs) const
+    {
+        if (train->priority == rhs.train->priority)
+        {
+            return train->timeLoaded < rhs.train->timeLoaded;
+        }
+        return train->priority < rhs.train->priority;
+    }
+} TrainThread;
+
+TrainThread *newTrainThread(void)
+{
+    TrainThread *nextTrainThread = (TrainThread *)malloc(sizeof(TrainThread));
+    nextTrainThread->train = newTrain();
+    return nextTrainThread;
+}
+
+void delTrainThread(TrainThread *trainThread)
+{
+    if (trainThread != NULL)
+    {
+        free(trainThread->train);
+        free(trainThread);
+    }
+}
+
 typedef struct Station
 {
-    std::priority_queue<Train> trainQueue;
+    std::priority_queue<TrainThread *> trainQueue;
     pthread_mutex_t trainQueueMutex;
-    Train *stationInput;
+    TrainThread *stationInput;
     pthread_mutex_t inputMutex;
     pthread_cond_t inputSignal;
     pthread_cond_t inputEmpty;
@@ -86,12 +108,12 @@ typedef struct Stations
 
 typedef struct Dispatcher
 {
-    bool bridgeBusy;
-    Train *westStationQueue;
+    bool trackBusy;
+    std::priority_queue<Train> *westStationQueue;
     pthread_mutex_t westStationQueueMutex;
-    Train *eastStationQueue;
+    std::priority_queue<Train> *eastStationQueue;
     pthread_mutex_t eastStationQueueMutex;
-    pthread_cond_t waitingTrainSignal;
+    bool waitingTrainSignal;
 } Dispatcher;
 
 typedef struct TrainThreadArgs
@@ -100,7 +122,7 @@ typedef struct TrainThreadArgs
     int numberInput;
     int loadTimeInput;
     int crossTimeInput;
-    Train train;
+    TrainThread *trainThread;
     bool *startSignal;
     Stations *stations;
     pthread_mutex_t *coutMutex;
@@ -110,6 +132,7 @@ typedef struct TrainThreadArgs
 TrainThreadArgs *newTrainThreadArgs()
 {
     TrainThreadArgs *nextTrainthreadArgs = (TrainThreadArgs *)malloc(sizeof(TrainThreadArgs));
+    nextTrainthreadArgs->trainThread = newTrainThread();
     return nextTrainthreadArgs;
 }
 
@@ -117,6 +140,7 @@ void delTrainThreadArgs(TrainThreadArgs *trainThreadArgs)
 {
     if (trainThreadArgs != NULL)
     {
+        free(trainThreadArgs->trainThread);
         free(trainThreadArgs);
     }
 }
@@ -125,7 +149,8 @@ typedef struct StationThreadArgs
 {
     Station *stationInfo;
     pthread_mutex_t *coutMutex;
-    pthread_cond_t *waitingTrainSignal;
+    bool *waitingTrainSignal;
+    long int *startTime;
 } StationThreadArgs;
 
 typedef struct DispatcherThreadArgs

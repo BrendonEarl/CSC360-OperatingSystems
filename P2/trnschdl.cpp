@@ -41,8 +41,15 @@ int main(int argc, char *argv[])
     westStationThreadArgs.stationInfo = &westStation;
     westStationThreadArgs.coutMutex = &coutMutex;
     westStationThreadArgs.waitingTrainSignal = &dispatch.waitingTrainSignal;
-
+    westStationThreadArgs.startTime = &startTime;
     pthread_create(&westStationThread, NULL, &createStation, (void *)&westStationThreadArgs);
+
+    StationThreadArgs eastStationThreadArgs;
+    eastStationThreadArgs.stationInfo = &eastStation;
+    eastStationThreadArgs.coutMutex = &coutMutex;
+    eastStationThreadArgs.waitingTrainSignal = &dispatch.waitingTrainSignal;
+    eastStationThreadArgs.startTime = &startTime;
+    pthread_create(&eastStationThread, NULL, &createStation, (void *)&eastStationThreadArgs);
 
     // ----- Setup Trains ------
     // Start signal
@@ -51,6 +58,7 @@ int main(int argc, char *argv[])
     std::ifstream infile(argv[1]);
     std::string trainEntry;
     // Parse in file
+    std::vector<TrainThread> trainThreads;
     int trainNum = 1;
     while (std::getline(infile, trainEntry))
     {
@@ -69,8 +77,12 @@ int main(int argc, char *argv[])
         std::cout << "Reading in: " << nextTrainThreadArgs->travelInput << " " << nextTrainThreadArgs->loadTimeInput << " " << nextTrainThreadArgs->crossTimeInput << std::endl;
         pthread_mutex_unlock(&coutMutex);
 
-        pthread_t some_thread;
-        pthread_create(&some_thread, NULL, &createTrain, (void *)nextTrainThreadArgs);
+        pthread_t nextThread;
+        pthread_create(&nextThread, NULL, &createTrain, (void *)nextTrainThreadArgs);
+
+        nextTrainThreadArgs->trainThread->thread = &nextThread;
+
+        trainThreads.push_back(*nextTrainThreadArgs->trainThread);
 
         trainNum += 1;
     }
@@ -85,6 +97,7 @@ int main(int argc, char *argv[])
 
     // Tell threads to start loading
     startLoadingSignal = true;
+
     nanosleep(&tim, &tim2);
     pthread_cond_broadcast(&westStation.inputEmpty);
 

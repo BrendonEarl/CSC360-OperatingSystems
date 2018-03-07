@@ -7,7 +7,7 @@
 void *createTrain(void *args)
 {
   TrainThreadArgs *trainArgs = (TrainThreadArgs *)args;
-  Train *thisTrain = &trainArgs->train;
+  Train *thisTrain = trainArgs->trainThread->train;
 
   if (trainArgs->travelInput.compare("E") == 0)
   {
@@ -47,14 +47,14 @@ void *createTrain(void *args)
             << thisTrain->crossTime
             << std::endl;
 
-  std::cout << "Train " << trainArgs->train.number << " waiting for signal" << std::endl;
+  std::cout << "Train " << thisTrain->number << " waiting for signal" << std::endl;
   pthread_mutex_unlock(trainArgs->coutMutex);
 
   while (*trainArgs->startSignal == 0)
     ;
 
   pthread_mutex_lock(trainArgs->coutMutex);
-  std::cout << "Train " << trainArgs->train.number << " released and loading for " << thisTrain->loadTime << "sec" << std::endl;
+  std::cout << "Train " << thisTrain->number << " released and loading for " << thisTrain->loadTime << "sec" << std::endl;
   pthread_mutex_unlock(trainArgs->coutMutex);
 
   struct timespec tim, tim2;
@@ -75,13 +75,19 @@ void *createTrain(void *args)
 
   if (thisTrain->direction == EAST)
   {
-    std::cout << "pushign" << std::endl;
     pthread_mutex_lock(&trainArgs->stations->west->inputMutex);
     // pthread_cond_wait(&trainArgs->stations->west->inputEmpty, &trainArgs->stations->west->inputMutex);
-    trainArgs->stations->west->stationInput = thisTrain;
-    std::cout << "pushed--" << std::endl;
+    trainArgs->stations->west->stationInput = trainArgs->trainThread;
     pthread_mutex_unlock(&trainArgs->stations->west->inputMutex);
     pthread_cond_signal(&trainArgs->stations->west->inputSignal);
+  }
+  else if (thisTrain->direction == WEST)
+  {
+    pthread_mutex_lock(&trainArgs->stations->east->inputMutex);
+    // pthread_cond_wait(&trainArgs->stations->east->inputEmpty, &trainArgs->stations->east->inputMutex);
+    trainArgs->stations->east->stationInput = trainArgs->trainThread;
+    pthread_mutex_unlock(&trainArgs->stations->east->inputMutex);
+    pthread_cond_signal(&trainArgs->stations->east->inputSignal);
   }
 
   // delTrainThreadArgs(trainArgs);

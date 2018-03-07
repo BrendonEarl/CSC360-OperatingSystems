@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <unistd.h>
 #include "train.h"
 
 void *createTrain(void *args)
@@ -55,8 +56,17 @@ void *createTrain(void *args)
   pthread_mutex_lock(trainArgs->coutMutex);
   // pthread_cond_wait(trainArgs->coutCond, trainArgs->coutMutex);
 
-  std::cout << "Train " << trainArgs->train.number << " released and loading" << std::endl;
+  std::cout << "Train " << trainArgs->train.number << " released and loading for " << thisTrain->loadTime << "sec" << std::endl;
   // pthread_cond_signal(trainArgs->coutCond);
+  pthread_mutex_unlock(trainArgs->coutMutex);
+
+  struct timespec tim, tim2;
+  tim.tv_sec = (long)thisTrain->loadTime;
+  tim.tv_nsec = ((long)thisTrain->loadTime * 1000000000L) % 1000000000L;
+  nanosleep(&tim, &tim2);
+
+  pthread_mutex_lock(trainArgs->coutMutex);
+  std::cout << "Train " << trainArgs->train.number << " finished loading" << std::endl;
   pthread_mutex_unlock(trainArgs->coutMutex);
 
   delTrainThreadArgs(trainArgs);

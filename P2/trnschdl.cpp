@@ -35,7 +35,10 @@ int main(int argc, char *argv[])
 
         std::istringstream iss(trainEntry);
         iss >> nextTrainThreadArgs->travelInput >> nextTrainThreadArgs->loadTimeInput >> nextTrainThreadArgs->crossTimeInput;
+
+        pthread_mutex_lock(&coutMutex);
         std::cout << "Reading in: " << nextTrainThreadArgs->travelInput << " " << nextTrainThreadArgs->loadTimeInput << " " << nextTrainThreadArgs->crossTimeInput << std::endl;
+        pthread_mutex_unlock(&coutMutex);
 
         pthread_t some_thread;
         pthread_create(&some_thread, NULL, &createTrain, (void *)nextTrainThreadArgs);

@@ -17,17 +17,18 @@ int main(int argc, char *argv[])
     // Output magement
     pthread_mutex_t coutMutex;
     pthread_mutex_init(&coutMutex, NULL);
-    pthread_cond_t coutCond;
-    pthread_cond_init(&coutCond, NULL);
+
+    // ----- Setup Dispatcher ------
+    Dispatcher dispatch;
 
     // ----- Setup Stations ------
+    pthread_t westStationThread, eastStationThread;
     Station westStation, eastStation;
-    westStation.trainQueue[100];
     pthread_mutex_init(&westStation.trainQueueMutex, NULL);
     westStation.stationInput = NULL;
     pthread_cond_init(&westStation.inputSignal, NULL);
     pthread_cond_init(&westStation.inputEmpty, NULL);
-    eastStation.trainQueue[100];
+
     pthread_mutex_init(&eastStation.trainQueueMutex, NULL);
     eastStation.stationInput = NULL;
     pthread_cond_init(&eastStation.inputSignal, NULL);
@@ -35,6 +36,13 @@ int main(int argc, char *argv[])
     Stations stations;
     stations.east = &eastStation;
     stations.west = &westStation;
+
+    StationThreadArgs westStationThreadArgs;
+    westStationThreadArgs.stationInfo = &westStation;
+    westStationThreadArgs.coutMutex = &coutMutex;
+    westStationThreadArgs.waitingTrainSignal = &dispatch.waitingTrainSignal;
+
+    pthread_create(&westStationThread, NULL, &createStation, (void *)&westStationThreadArgs);
 
     // ----- Setup Trains ------
     // Start signal
@@ -51,7 +59,6 @@ int main(int argc, char *argv[])
         nextTrainThreadArgs->numberInput = trainNum;
         nextTrainThreadArgs->startSignal = &startLoadingSignal;
         nextTrainThreadArgs->coutMutex = &coutMutex;
-        nextTrainThreadArgs->coutCond = &coutCond;
         nextTrainThreadArgs->stations = &stations;
         nextTrainThreadArgs->startTime = &startTime;
 
@@ -74,11 +81,12 @@ int main(int argc, char *argv[])
     tim.tv_nsec = 0;
     nanosleep(&tim, &tim2);
 
-    struct timeval tp;
-    gettimeofday(&tp, NULL);
-    startTime = tp.tv_sec * 1000 + tp.tv_usec / 1000;
+    startTime = timestamp();
+
     // Tell threads to start loading
     startLoadingSignal = true;
+    nanosleep(&tim, &tim2);
+    pthread_cond_broadcast(&westStation.inputEmpty);
 
     while (true)
         ;

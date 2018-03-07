@@ -16,6 +16,7 @@ void *createStation(void *args)
         thisStation->trainQueue.push(thisStation->stationInput);
         thisStation->stationInput = NULL;
         pthread_mutex_unlock(&thisStation->trainQueueMutex);
+        *stationArgs->waitingTrainSignal = true;
 
         pthread_mutex_lock(stationArgs->coutMutex);
         std::stringstream output;

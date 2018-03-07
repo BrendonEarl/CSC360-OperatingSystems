@@ -108,11 +108,11 @@ typedef struct Stations
 
 typedef struct Dispatcher
 {
-    bool trackBusy;
-    std::priority_queue<Train> *westStationQueue;
-    pthread_mutex_t westStationQueueMutex;
-    std::priority_queue<Train> *eastStationQueue;
-    pthread_mutex_t eastStationQueueMutex;
+    Direction lastDirection;
+    std::priority_queue<TrainThread *> *westStationQueue;
+    pthread_mutex_t *westStationQueueMutex;
+    std::priority_queue<TrainThread *> *eastStationQueue;
+    pthread_mutex_t *eastStationQueueMutex;
     bool waitingTrainSignal;
 } Dispatcher;
 
@@ -155,7 +155,9 @@ typedef struct StationThreadArgs
 
 typedef struct DispatcherThreadArgs
 {
-    Dispatcher dispatcherInfo;
+    pthread_mutex_t *coutMutex;
+    Dispatcher *dispatcherInfo;
+    long int *startTime;
 } DispatcherThreadArgs;
 
 long int timestamp()

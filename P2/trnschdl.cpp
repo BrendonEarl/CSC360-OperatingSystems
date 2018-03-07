@@ -19,7 +19,12 @@ int main(int argc, char *argv[])
     pthread_mutex_init(&coutMutex, NULL);
 
     // ----- Setup Dispatcher ------
-    Dispatcher dispatch;
+    Dispatcher dispatcher;
+    dispatcher.lastDirection = WEST;
+    DispatcherThreadArgs dispatcherThreadArgs;
+    dispatcherThreadArgs.coutMutex = &coutMutex;
+    dispatcherThreadArgs.startTime = &startTime;
+    dispatcherThreadArgs.dispatcherInfo = &dispatcher;
 
     // ----- Setup Stations ------
     pthread_t westStationThread, eastStationThread;
@@ -33,6 +38,7 @@ int main(int argc, char *argv[])
     eastStation.stationInput = NULL;
     pthread_cond_init(&eastStation.inputSignal, NULL);
     pthread_cond_init(&eastStation.inputEmpty, NULL);
+
     Stations stations;
     stations.east = &eastStation;
     stations.west = &westStation;
@@ -40,16 +46,23 @@ int main(int argc, char *argv[])
     StationThreadArgs westStationThreadArgs;
     westStationThreadArgs.stationInfo = &westStation;
     westStationThreadArgs.coutMutex = &coutMutex;
-    westStationThreadArgs.waitingTrainSignal = &dispatch.waitingTrainSignal;
+    westStationThreadArgs.waitingTrainSignal = &dispatcher.waitingTrainSignal;
     westStationThreadArgs.startTime = &startTime;
     pthread_create(&westStationThread, NULL, &createStation, (void *)&westStationThreadArgs);
 
     StationThreadArgs eastStationThreadArgs;
     eastStationThreadArgs.stationInfo = &eastStation;
     eastStationThreadArgs.coutMutex = &coutMutex;
-    eastStationThreadArgs.waitingTrainSignal = &dispatch.waitingTrainSignal;
+    eastStationThreadArgs.waitingTrainSignal = &dispatcher.waitingTrainSignal;
     eastStationThreadArgs.startTime = &startTime;
     pthread_create(&eastStationThread, NULL, &createStation, (void *)&eastStationThreadArgs);
+
+    dispatcher.westStationQueue = &westStation.trainQueue;
+    dispatcher.westStationQueueMutex = &westStation.trainQueueMutex;
+    dispatcher.eastStationQueue = &eastStation.trainQueue;
+    dispatcher.eastStationQueueMutex = &eastStation.trainQueueMutex;
+    pthread_t dispatcherThread;
+    pthread_create(&dispatcherThread, NULL, &createDispatcher, (void *)&dispatcherThreadArgs);
 
     // ----- Setup Trains ------
     // Start signal

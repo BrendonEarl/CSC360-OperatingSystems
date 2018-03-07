@@ -17,6 +17,9 @@ int main(int argc, char *argv[])
     pthread_cond_t coutCond;
     pthread_cond_init(&coutCond, NULL);
 
+    // ----- Setup Stations ------
+
+    // ----- Setup Trains ------
     // Start signal
     bool startLoadingSignal = false;
     // Create file stream and string to stream to
@@ -46,9 +49,13 @@ int main(int argc, char *argv[])
         trainNum += 1;
     }
 
-    for (int i = 0; i < 10000000; i++)
-        ;
+    // Sleep main thread for 1 second to ensure threads finish prepping
+    struct timespec tim, tim2;
+    tim.tv_sec = 1;
+    tim.tv_nsec = 0;
+    nanosleep(&tim, &tim2);
 
+    // Tell threads to start loading
     startLoadingSignal = true;
 
     while (true)

@@ -11,6 +11,9 @@ int main(int argc, char *argv[])
         std::cout << "Incorrect number of params" << std::endl;
     }
 
+    // Various
+    long int startTime;
+
     // Output magement
     pthread_mutex_t coutMutex;
     pthread_mutex_init(&coutMutex, NULL);
@@ -18,6 +21,20 @@ int main(int argc, char *argv[])
     pthread_cond_init(&coutCond, NULL);
 
     // ----- Setup Stations ------
+    Station westStation, eastStation;
+    westStation.trainQueue[100];
+    pthread_mutex_init(&westStation.trainQueueMutex, NULL);
+    westStation.stationInput = NULL;
+    pthread_cond_init(&westStation.inputSignal, NULL);
+    pthread_cond_init(&westStation.inputEmpty, NULL);
+    eastStation.trainQueue[100];
+    pthread_mutex_init(&eastStation.trainQueueMutex, NULL);
+    eastStation.stationInput = NULL;
+    pthread_cond_init(&eastStation.inputSignal, NULL);
+    pthread_cond_init(&eastStation.inputEmpty, NULL);
+    Stations stations;
+    stations.east = &eastStation;
+    stations.west = &westStation;
 
     // ----- Setup Trains ------
     // Start signal
@@ -35,6 +52,8 @@ int main(int argc, char *argv[])
         nextTrainThreadArgs->startSignal = &startLoadingSignal;
         nextTrainThreadArgs->coutMutex = &coutMutex;
         nextTrainThreadArgs->coutCond = &coutCond;
+        nextTrainThreadArgs->stations = &stations;
+        nextTrainThreadArgs->startTime = &startTime;
 
         std::istringstream iss(trainEntry);
         iss >> nextTrainThreadArgs->travelInput >> nextTrainThreadArgs->loadTimeInput >> nextTrainThreadArgs->crossTimeInput;
@@ -55,6 +74,9 @@ int main(int argc, char *argv[])
     tim.tv_nsec = 0;
     nanosleep(&tim, &tim2);
 
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    startTime = tp.tv_sec * 1000 + tp.tv_usec / 1000;
     // Tell threads to start loading
     startLoadingSignal = true;
 

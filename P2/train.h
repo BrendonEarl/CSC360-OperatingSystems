@@ -64,15 +64,19 @@ typedef struct TrainThread
 {
     Train *train;
     pthread_t *thread;
-    bool operator<(const TrainThread &rhs) const
-    {
-        if (train->priority == rhs.train->priority)
-        {
-            return train->timeLoaded < rhs.train->timeLoaded;
-        }
-        return train->priority < rhs.train->priority;
-    }
 } TrainThread;
+
+struct LessThanByTrainThread : public std::binary_function<TrainThread *, TrainThread *, bool>
+{
+    bool operator()(const TrainThread *lhs, const TrainThread *rhs) const
+    {
+        if (lhs->train->priority == rhs->train->priority)
+        {
+            return lhs->train->timeLoaded < rhs->train->timeLoaded;
+        }
+        return lhs->train->priority < rhs->train->priority;
+    }
+};
 
 TrainThread *newTrainThread(void)
 {
@@ -92,7 +96,7 @@ void delTrainThread(TrainThread *trainThread)
 
 typedef struct Station
 {
-    std::priority_queue<TrainThread *> trainQueue;
+    std::priority_queue<TrainThread *, std::vector<TrainThread *>, LessThanByTrainThread> trainQueue;
     pthread_mutex_t trainQueueMutex;
     TrainThread *stationInput;
     pthread_mutex_t inputMutex;
@@ -110,9 +114,9 @@ typedef struct Stations
 typedef struct Dispatcher
 {
     Direction lastDirection;
-    std::priority_queue<TrainThread *> *westStationQueue;
+    std::priority_queue<TrainThread *, std::vector<TrainThread *>, LessThanByTrainThread> *westStationQueue;
     pthread_mutex_t *westStationQueueMutex;
-    std::priority_queue<TrainThread *> *eastStationQueue;
+    std::priority_queue<TrainThread *, std::vector<TrainThread *>, LessThanByTrainThread> *eastStationQueue;
     pthread_mutex_t *eastStationQueueMutex;
     bool waitingTrainSignal;
 } Dispatcher;

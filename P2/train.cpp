@@ -33,23 +33,6 @@ void *createTrain(void *args)
   thisTrain->loadTime = float(trainArgs->loadTimeInput) / 10;
   thisTrain->crossTime = float(trainArgs->crossTimeInput) / 10;
 
-  pthread_mutex_lock(trainArgs->coutMutex);
-  std::cout << "Train "
-            << std::setw(2) << std::right
-            << thisTrain->number
-            << " intialized. dir: "
-            << thisTrain->direction
-            << " pri: "
-            << thisTrain->priority
-            << " load time: "
-            << thisTrain->loadTime
-            << " cross time: "
-            << thisTrain->crossTime
-            << std::endl;
-
-  std::cout << "Train " << thisTrain->number << " waiting for signal" << std::endl;
-  pthread_mutex_unlock(trainArgs->coutMutex);
-
   while (*trainArgs->startSignal == 0)
     ;
 

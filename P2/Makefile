@@ -6,6 +6,6 @@ trnschdl: trnschdl.cpp dispatcher.cpp station.cpp train.cpp train.h
 
 .PHONY clean:
 clean:
-	-rm train station dispatcher trnschdl
+	-rm trnschdl
 	-rm -rf *.o *.exe
 	-rm -rf trnschdl.dSYM

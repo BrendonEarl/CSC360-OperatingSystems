@@ -49,13 +49,6 @@ void *createTrain(void *args)
   gettimeofday(&tp, NULL);
   thisTrain->timeLoaded = tp.tv_sec * 1000 + tp.tv_usec / 1000;
 
-  pthread_mutex_lock(trainArgs->coutMutex);
-  long int completeLoadTime = thisTrain->timeLoaded - *(trainArgs->startTime);
-  std::stringstream output;
-  output << "Train " << std::setw(2) << std::left << thisTrain->number << " finished loading ";
-  announce(completeLoadTime, output.str());
-  pthread_mutex_unlock(trainArgs->coutMutex);
-
   if (thisTrain->direction == EAST)
   {
     pthread_mutex_lock(&trainArgs->stations->west->inputMutex);

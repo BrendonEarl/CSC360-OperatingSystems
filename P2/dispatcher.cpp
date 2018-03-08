@@ -8,9 +8,11 @@ void *createDispatcher(void *args)
     DispatcherThreadArgs *dispatcherThreadArgs = (DispatcherThreadArgs *)args;
     Dispatcher *thisDispatcher = dispatcherThreadArgs->dispatcherInfo;
 
+    int count = 0;
+
     while (true)
     {
-        while (thisDispatcher->waitingTrainSignal == false)
+        while (*thisDispatcher->waitingTrainSignal == false)
             ;
 
         pthread_mutex_lock(thisDispatcher->westStationQueueMutex);
@@ -91,7 +93,9 @@ void *createDispatcher(void *args)
 
         if (thisDispatcher->westStationQueue->empty() && thisDispatcher->eastStationQueue->empty())
         {
-            thisDispatcher->waitingTrainSignal = false;
+            pthread_mutex_lock(thisDispatcher->settingTrainSignal);
+            *thisDispatcher->waitingTrainSignal = false;
+            pthread_mutex_unlock(thisDispatcher->settingTrainSignal);
         }
         pthread_mutex_unlock(thisDispatcher->westStationQueueMutex);
         pthread_mutex_unlock(thisDispatcher->eastStationQueueMutex);
@@ -121,5 +125,12 @@ void *createDispatcher(void *args)
                << getDirection(selectedTrain.direction);
         announce(endCrossingTime, output.str());
         pthread_mutex_unlock(dispatcherThreadArgs->coutMutex);
+        // count += 1;
+        // if (count == *dispatcherThreadArgs->trainNum)
+        // {
+        //     std::cout << "c" << count << "tn" << *dispatcherThreadArgs->trainNum << std::endl;
+        //     *dispatcherThreadArgs->quit = true;
+        // }
+        // std::cout << "c" << count << "tn" << *dispatcherThreadArgs->trainNum << std::endl;
     }
 }

@@ -11,12 +11,15 @@ void *createStation(void *args)
     while (true)
     {
         pthread_mutex_lock(&thisStation->trainQueueMutex);
-        pthread_cond_broadcast(&thisStation->inputEmpty);
+        pthread_cond_signal(&thisStation->inputEmpty);
         pthread_cond_wait(&thisStation->inputSignal, &thisStation->trainQueueMutex);
         thisStation->trainQueue.push(thisStation->stationInput);
         thisStation->stationInput = NULL;
         pthread_mutex_unlock(&thisStation->trainQueueMutex);
+
+        pthread_mutex_lock(stationArgs->settingTrainSignal);
         *stationArgs->waitingTrainSignal = true;
+        pthread_mutex_unlock(stationArgs->settingTrainSignal);
 
         pthread_mutex_lock(stationArgs->coutMutex);
         std::stringstream output;

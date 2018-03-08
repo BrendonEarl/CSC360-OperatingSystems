@@ -118,7 +118,8 @@ typedef struct Dispatcher
     pthread_mutex_t *westStationQueueMutex;
     std::priority_queue<TrainThread *, std::vector<TrainThread *>, LessThanByTrainThread> *eastStationQueue;
     pthread_mutex_t *eastStationQueueMutex;
-    bool waitingTrainSignal;
+    pthread_mutex_t *settingTrainSignal;
+    bool *waitingTrainSignal;
 } Dispatcher;
 
 typedef struct TrainThreadArgs
@@ -154,6 +155,7 @@ typedef struct StationThreadArgs
 {
     Station *stationInfo;
     pthread_mutex_t *coutMutex;
+    pthread_mutex_t *settingTrainSignal;
     bool *waitingTrainSignal;
     long int *startTime;
 } StationThreadArgs;
@@ -163,6 +165,8 @@ typedef struct DispatcherThreadArgs
     pthread_mutex_t *coutMutex;
     Dispatcher *dispatcherInfo;
     long int *startTime;
+    int *trainNum;
+    bool *quit;
 } DispatcherThreadArgs;
 
 long int timestamp()

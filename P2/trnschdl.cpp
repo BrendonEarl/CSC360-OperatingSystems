@@ -13,6 +13,11 @@ int main(int argc, char *argv[])
 
     // Various
     long int startTime;
+    bool quit = false;
+    int trainNum;
+    bool waitingTrain = false;
+    pthread_mutex_t settingTrainSignal;
+    pthread_mutex_init(&settingTrainSignal, NULL);
 
     // Output magement
     pthread_mutex_t coutMutex;
@@ -21,10 +26,14 @@ int main(int argc, char *argv[])
     // ----- Setup Dispatcher ------
     Dispatcher dispatcher;
     dispatcher.lastDirection = WEST;
+    dispatcher.waitingTrainSignal = &waitingTrain;
+    dispatcher.settingTrainSignal = &settingTrainSignal;
     DispatcherThreadArgs dispatcherThreadArgs;
     dispatcherThreadArgs.coutMutex = &coutMutex;
     dispatcherThreadArgs.startTime = &startTime;
     dispatcherThreadArgs.dispatcherInfo = &dispatcher;
+    dispatcherThreadArgs.trainNum = &trainNum;
+    dispatcherThreadArgs.quit = &quit;
 
     // ----- Setup Stations ------
     pthread_t westStationThread, eastStationThread;
@@ -46,15 +55,17 @@ int main(int argc, char *argv[])
     StationThreadArgs westStationThreadArgs;
     westStationThreadArgs.stationInfo = &westStation;
     westStationThreadArgs.coutMutex = &coutMutex;
-    westStationThreadArgs.waitingTrainSignal = &dispatcher.waitingTrainSignal;
+    westStationThreadArgs.waitingTrainSignal = dispatcher.waitingTrainSignal;
     westStationThreadArgs.startTime = &startTime;
+    westStationThreadArgs.settingTrainSignal = &settingTrainSignal;
     pthread_create(&westStationThread, NULL, &createStation, (void *)&westStationThreadArgs);
 
     StationThreadArgs eastStationThreadArgs;
     eastStationThreadArgs.stationInfo = &eastStation;
     eastStationThreadArgs.coutMutex = &coutMutex;
-    eastStationThreadArgs.waitingTrainSignal = &dispatcher.waitingTrainSignal;
+    eastStationThreadArgs.waitingTrainSignal = dispatcher.waitingTrainSignal;
     eastStationThreadArgs.startTime = &startTime;
+    eastStationThreadArgs.settingTrainSignal = &settingTrainSignal;
     pthread_create(&eastStationThread, NULL, &createStation, (void *)&eastStationThreadArgs);
 
     dispatcher.westStationQueue = &westStation.trainQueue;
@@ -72,7 +83,7 @@ int main(int argc, char *argv[])
     std::string trainEntry;
     // Parse in file
     std::vector<TrainThread> trainThreads;
-    int trainNum = 1;
+    trainNum = 1;
     while (std::getline(infile, trainEntry))
     {
         TrainThreadArgs *nextTrainThreadArgs = newTrainThreadArgs();
@@ -85,10 +96,6 @@ int main(int argc, char *argv[])
 
         std::istringstream iss(trainEntry);
         iss >> nextTrainThreadArgs->travelInput >> nextTrainThreadArgs->loadTimeInput >> nextTrainThreadArgs->crossTimeInput;
-
-        pthread_mutex_lock(&coutMutex);
-        std::cout << "Reading in: " << nextTrainThreadArgs->travelInput << " " << nextTrainThreadArgs->loadTimeInput << " " << nextTrainThreadArgs->crossTimeInput << std::endl;
-        pthread_mutex_unlock(&coutMutex);
 
         pthread_t nextThread;
         pthread_create(&nextThread, NULL, &createTrain, (void *)nextTrainThreadArgs);
@@ -112,9 +119,10 @@ int main(int argc, char *argv[])
     startLoadingSignal = true;
 
     nanosleep(&tim, &tim2);
-    pthread_cond_broadcast(&westStation.inputEmpty);
+    pthread_cond_signal(&westStation.inputEmpty);
+    pthread_cond_signal(&eastStation.inputEmpty);
 
-    while (true)
+    while (quit != true)
         ;
 
     return 0;

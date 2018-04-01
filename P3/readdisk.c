@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
-#include <fcntl.h>
+// #include <unistd.h>
+// #include <fcntl.h>  // file control
 #include <errno.h>  // provides thrown errnos
-#include <string.h> // provides error stringifying
+#include <string.h> // error stringifying
 #include "disk.h"
 // #include <sys/types.h>
 

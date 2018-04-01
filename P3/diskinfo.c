@@ -5,5 +5,7 @@
 
 int main()
 {
-    readdisk("test.img");
+    FILE *img = readdisk("test.img");
+    struct superblock_t superblock = readsuperblock(img);
+    printsuperblock(superblock);
 }

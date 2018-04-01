@@ -36,7 +36,21 @@ struct superblock_t readsuperblock(FILE *img)
 
 void printsuperblock(struct superblock_t superblock)
 {
-    unsigned long i = 0;
+    unsigned long i;
+
+    printf("Super block information:\n");
+    printf("Block size: %d\n", -1);
+    printf("Block count: %d\n", -1);
+    printf("FAT starts: %d\n", -1);
+    printf("FAT blocks: %d\n", -1);
+    printf("Root directory start: %d\n", -1);
+    printf("Root directory blocks: %d\n", -1);
+
+    printf("FAT information:");
+    printf("Free Blocks: %d\n", -1);
+    printf("Reserved Blocks: %d\n", -1);
+    printf("Allocated Blocks: %d\n", -1);
+
     for (i = 0; i < (sizeof(superblock.fs_id) / sizeof(superblock.fs_id[0])); i++)
     {
         printf("%d ", superblock.fs_id[i]);

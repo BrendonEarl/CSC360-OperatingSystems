@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     std::string trainEntry;
     // Parse in file
     std::vector<TrainThread> trainThreads;
-    trainNum = 1;
+    trainNum = 0;
     while (std::getline(infile, trainEntry))
     {
         TrainThreadArgs *nextTrainThreadArgs = newTrainThreadArgs();

@@ -26,7 +26,7 @@ void *createStation(void *args)
         output << "Train "
                << std::setw(2) << std::left
                << thisStation->trainQueue.top()->train->number
-               << " queued and ready to go "
+               << " is ready to go "
                << getDirection(thisStation->trainQueue.top()->train->direction);
         announce(timestamp() - *(stationArgs->startTime), output.str());
         pthread_mutex_unlock(stationArgs->coutMutex);

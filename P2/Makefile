@@ -1,11 +1,11 @@
 .phony all:
-all: trnschdl
+all: mts
 
-trnschdl: trnschdl.cpp dispatcher.cpp station.cpp train.cpp train.h
-	g++ -pthread -g -o trnschdl trnschdl.cpp
+mts: trnschdl.cpp dispatcher.cpp station.cpp train.cpp train.h
+	g++ -pthread -g -o mts trnschdl.cpp
 
 .PHONY clean:
 clean:
-	-rm trnschdl
+	-rm mts
 	-rm -rf *.o *.exe
-	-rm -rf trnschdl.dSYM
+	-rm -rf mts.dSYM

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 // #include <stdio.h>
-// #include <stdint.h>
+#include <stdint.h>
 // #include <sys/types.h>
 // #include <time.h>
 
@@ -39,6 +39,14 @@ struct __attribute__((__packed__)) dir_entry_t
     uint8_t filename[31];
     uint8_t unused[6];
 };
+
+unsigned char flipbyte(unsigned char b)
+{
+    b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+    b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+    b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+    return b;
+}
 
 // struct stat
 // {

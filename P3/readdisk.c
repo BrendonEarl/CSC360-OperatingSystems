@@ -37,31 +37,9 @@ struct superblock_t readsuperblock(FILE *img)
     return superblock;
 }
 
-uint32_t *readfat(FILE *img, struct superblock_t sb)
-{
-    unsigned long blksize = htons(sb.block_size);
-    unsigned long fatstart = htonl(sb.fat_start_block) * blksize;
-    unsigned long fatend = fatstart + htonl(sb.fat_block_count) * blksize;
-    unsigned long fatlen = fatend - fatstart;
-    uint32_t *fatblocks = (uint32_t *)malloc(fatlen);
-
-    fseek(img, fatstart, SEEK_SET);
-    fread(fatblocks, sizeof(uint32_t), fatlen / sizeof(uint32_t), img);
-
-    return fatblocks;
-}
-
 void printsuperblock(struct superblock_t sb)
 {
-    unsigned long i;
-
     printf("Super block information:\n");
-    unsigned long id = 0;
-    unsigned long id_size = (sizeof(sb.fs_id) / sizeof(sb.fs_id[0]));
-    for (i = 0; i < id_size; i++)
-    {
-        id += sb.fs_id[i] * pow(2, (id_size - i));
-    }
     printf("Block size: %d\n", htons(sb.block_size));
     printf("Block count: %d\n", htonl(sb.file_system_block_count));
     printf("FAT starts: %d\n", htonl(sb.fat_start_block));
@@ -70,21 +48,29 @@ void printsuperblock(struct superblock_t sb)
     printf("Root directory blocks: %d\n\n", htonl(sb.root_dir_block_count));
 }
 
-void printfatinfo(struct superblock_t sb, uint32_t *fatblocks)
+void summarizefat(FILE *img, struct superblock_t sb)
 {
-    unsigned long fatlen = (htonl(sb.fat_block_count) - htons(sb.block_size)) / 4;
+    unsigned long blksize = htons(sb.block_size);
+    unsigned long fatstart = htonl(sb.fat_start_block) * blksize;
+    unsigned long fatend = fatstart + htonl(sb.fat_block_count) * blksize;
+    unsigned long fatlen = fatend - fatstart;
+
+    uint32_t fatblock;
+    fseek(img, fatstart, SEEK_SET);
+
     unsigned long freeblocks = 0;
     unsigned long reservedblocks = 0;
     unsigned long allocatedblocks = 0;
 
     unsigned long i;
-    for (i = 0; i < fatlen; i++)
+    for (i = 0; i < fatlen / 4; i++)
     {
-        if (fatblocks[i] == 0)
+        fread(&fatblock, sizeof(uint32_t), 1, img);
+        if (htonl(fatblock) == 0x00000000)
         {
-            freeblocks += 2;
+            freeblocks += 1;
         }
-        else if (fatblocks[i] == 1)
+        else if (htonl(fatblock) == 0x00000001)
         {
             reservedblocks += 1;
         }
@@ -110,7 +96,7 @@ void printfileinfo(struct superblock_t sb, struct dir_entry_t *direntries)
     for (i = 0; i < fatlen; i++)
     {
         char type;
-        if ((htonb(direntries[i].status) & 0x02) == 0x02)
+        if ((flipbyte(direntries[i].status) & 0x02) == 0x02)
             type = 'D';
         else
             type = 'F';

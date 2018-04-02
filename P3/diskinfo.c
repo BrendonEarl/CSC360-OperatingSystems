@@ -8,7 +8,10 @@ int main()
     FILE *img = readdisk("test.img");
     struct superblock_t superblock = readsuperblock(img);
     printsuperblock(superblock);
-    struct dir_entry_t *direntries = readfat(img, superblock);
+    uint32_t *fatblocks = readfat(img, superblock);
+    printfatinfo(superblock, fatblocks);
 
-    // printfatinfo(*superblock, direntries);
+    // struct dir_entry_t *direntries = readfat(img, superblock);
+    // printfileinfo(superblock, direntries);
+    // free(direntries);
 }

@@ -120,9 +120,11 @@ void printfolderinfo(FILE *img, struct superblock_t sb)
         {
             char type;
             if ((direntry.status & 0x02) == 0x02)
+                type = 'F';
+            else if ((direntry.status & 0x04) == 0x04)
                 type = 'D';
             else
-                type = 'F';
+                type = '\0';
 
             char datetime[19];
             parsetime(datetime, direntry.modify_time);

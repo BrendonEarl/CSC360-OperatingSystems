@@ -22,9 +22,20 @@ FILE *readdisk(char *diskpath)
         printf("\nfopen() Failed with code [%s]\n\n", strerror(errno));
         return NULL;
     }
-    else
+
+    return img;
+}
+
+FILE *writedisk(char *diskpath)
     {
-        printf("\nfopen() Successful\n\n");
+    FILE *img;
+    img = fopen(diskpath, "w");
+
+    /* Handle failed file open */
+    if (img == NULL)
+    {
+        printf("\nfopen() Failed with code [%s]\n\n", strerror(errno));
+        return NULL;
     }
 
     return img;
@@ -91,7 +102,7 @@ void parsetime(char *strout, struct dir_entry_timedate_t direntrytd)
 {
     struct tm dirtimedate;
     dirtimedate.tm_year = htons(direntrytd.year) - 1900;
-    dirtimedate.tm_mon = direntrytd.month;
+    dirtimedate.tm_mon = direntrytd.month - 1;
     dirtimedate.tm_mday = direntrytd.day;
     dirtimedate.tm_hour = direntrytd.hour;
     dirtimedate.tm_min = direntrytd.minute;

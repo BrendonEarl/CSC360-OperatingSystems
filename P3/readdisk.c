@@ -109,7 +109,7 @@ void parsetime(char *strout, struct dir_entry_timedate_t direntrytd)
     dirtimedate.tm_sec = direntrytd.second;
     dirtimedate.tm_isdst = -1;
 
-    strftime(strout, 19, "%Y/%m/%d %H:%M:%S", &dirtimedate);
+    strftime(strout, 20, "%Y/%m/%d %H:%M:%S", &dirtimedate);
 }
 
 void printfolderinfo(FILE *img, struct superblock_t sb)
@@ -137,7 +137,7 @@ void printfolderinfo(FILE *img, struct superblock_t sb)
             else
                 type = '\0';
 
-            char datetime[19];
+            char datetime[20];
             parsetime(datetime, direntry.modify_time);
             printf("%c %10d %30s %s\n", type, htonl(direntry.size), direntry.filename, datetime);
         }

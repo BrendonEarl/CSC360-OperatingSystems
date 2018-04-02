@@ -27,7 +27,7 @@ FILE *readdisk(char *diskpath)
 }
 
 FILE *writedisk(char *diskpath)
-    {
+{
     FILE *img;
     img = fopen(diskpath, "w");
 
@@ -112,6 +112,30 @@ void parsetime(char *strout, struct dir_entry_timedate_t direntrytd)
     strftime(strout, 20, "%Y/%m/%d %H:%M:%S", &dirtimedate);
 }
 
+// findfolderfromrelative(FILE *img, struct superblock_t sb, char *foldername, unsigned long loc)
+// {
+//     struct dir_entry_t direntry;
+//     fseek(img, loc, SEEK_SET);
+// }
+
+// void findfolderfromroot(FILE *img, struct superblock_t sb, char *foldername)
+// {
+//     unsigned long blksize = htons(sb.block_size);
+//     unsigned long rootstart = htonl(sb.root_dir_start_block) * blksize;
+//     unsigned long rootend = rootstart + htonl(sb.root_dir_block_count) * blksize;
+//     unsigned long rootlen = rootend - rootstart;
+
+//     struct dir_entry_t direntry;
+//     fseek(img, rootstart, SEEK_SET);
+
+//     unsigned long i;
+//     for (i = 0; i < rootlen / sizeof(direntry); i++)
+//     {
+//         fseek(img, rootstart + i * sizeof(direntry), SEEK_SET);
+//         fread(&direntry, sizeof(struct dir_entry_t), 1, img);
+//     }
+// }
+
 void printfolderinfo(FILE *img, struct superblock_t sb)
 {
     unsigned long blksize = htons(sb.block_size);
@@ -141,5 +165,67 @@ void printfolderinfo(FILE *img, struct superblock_t sb)
             parsetime(datetime, direntry.modify_time);
             printf("%c %10d %30s %s\n", type, htonl(direntry.size), direntry.filename, datetime);
         }
+    }
+}
+
+uint32_t *gatherfile(FILE *img, struct superblock_t sb, struct dir_entry_t direntry)
+{
+    unsigned long blksize = htons(sb.block_size);
+    unsigned long entrystart = htonl(direntry.starting_block) * blksize;
+    unsigned long entrylen = htonl(direntry.block_count) * blksize / 4;
+    printf("%lu\n", entrystart);
+    printf("%lu\n", entrylen);
+
+    uint32_t fatentry;
+    // uint32_t fileentry[blksize / 4];
+    uint32_t *file = (uint32_t *)malloc(entrylen);
+
+    unsigned long i = 0;
+    for (i = 0; i < htonl(direntry.size) / 4; i++)
+    {
+        fseek(img, entrystart + i * sizeof(uint32_t), SEEK_SET);
+        fread(&fatentry, sizeof(uint32_t), 1, img);
+
+        file[i] = fatentry;
+    }
+
+    return file;
+}
+
+void copyout(FILE *img, struct superblock_t sb, char *srcloc, char *dstloc)
+{
+    unsigned long found = 0;
+    unsigned long blksize = htons(sb.block_size);
+    unsigned long rootstart = htonl(sb.root_dir_start_block) * blksize;
+    unsigned long rootend = rootstart + htonl(sb.root_dir_block_count) * blksize;
+    unsigned long rootlen = rootend - rootstart;
+
+    struct dir_entry_t direntry;
+    fseek(img, rootstart, SEEK_SET);
+
+    unsigned long i;
+    for (i = 0; i < rootlen / sizeof(direntry); i++)
+    {
+        fread(&direntry, sizeof(struct dir_entry_t), 1, img);
+
+        if (direntry.size > 0)
+        {
+            if (strcmp((char *)direntry.filename, srcloc) == 0)
+            {
+                printf("match!\n");
+                found = 1;
+                uint32_t *fileout = gatherfile(img, sb, direntry);
+                printf("%x", *fileout);
+                // printf("%s, %s", srcloc, dstloc);
+                FILE *of = writedisk(dstloc);
+                fwrite(fileout, blksize, htonl(direntry.block_count), of);
+            }
+            else
+                continue;
+        }
+    }
+    if (found == 0)
+    {
+        printf("File not found.\n");
     }
 }

@@ -173,11 +173,8 @@ uint32_t *gatherfile(FILE *img, struct superblock_t sb, struct dir_entry_t diren
     unsigned long blksize = htons(sb.block_size);
     unsigned long entrystart = htonl(direntry.starting_block) * blksize;
     unsigned long entrylen = htonl(direntry.block_count) * blksize / 4;
-    printf("%lu\n", entrystart);
-    printf("%lu\n", entrylen);
 
     uint32_t fatentry;
-    // uint32_t fileentry[blksize / 4];
     uint32_t *file = (uint32_t *)malloc(entrylen);
 
     unsigned long i = 0;
@@ -212,11 +209,8 @@ void copyout(FILE *img, struct superblock_t sb, char *srcloc, char *dstloc)
         {
             if (strcmp((char *)direntry.filename, srcloc) == 0)
             {
-                printf("match!\n");
                 found = 1;
                 uint32_t *fileout = gatherfile(img, sb, direntry);
-                printf("%x", *fileout);
-                // printf("%s, %s", srcloc, dstloc);
                 FILE *of = writedisk(dstloc);
                 fwrite(fileout, blksize, htonl(direntry.block_count), of);
             }

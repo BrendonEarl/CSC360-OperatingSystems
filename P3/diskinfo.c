@@ -9,4 +9,5 @@ int main()
     struct superblock_t superblock = readsuperblock(img);
     printsuperblock(superblock);
     summarizefat(img, superblock);
+    printfolderinfo(img, superblock);
 }

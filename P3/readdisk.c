@@ -175,7 +175,7 @@ uint32_t *gatherfile(FILE *img, struct superblock_t sb, struct dir_entry_t diren
     unsigned long entrylen = htonl(direntry.block_count) * blksize / 4;
 
     uint32_t fatentry;
-    uint32_t *file = (uint32_t *)malloc(entrylen);
+    uint32_t *file = (uint32_t *)malloc(entrylen + 1);
 
     unsigned long i = 0;
     for (i = 0; i < htonl(direntry.size) / 4; i++)
